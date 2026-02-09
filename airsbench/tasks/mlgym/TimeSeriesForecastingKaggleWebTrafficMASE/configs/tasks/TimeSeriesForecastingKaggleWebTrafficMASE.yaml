@@ -1,0 +1,65 @@
+dataset_configs:
+- datasets/monash_tsf.yaml
+description: "\n# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to complete the project's TASK following the instructions provided\
+  \ below.\n\n    TASK: This is a Time Series task to perform time series forecasting\
+  \ (59\n forecasts ahead) on Monash-University/monash_tsf. You will be provided with\
+  \ time series data (`target`), and will need to forecast the future value (59\n\
+  \ values). Your predictions will be scored against the `label_target` column of\
+  \ the test set.\n\n## Data\n### Dataset Structure\nThe kaggle_web_traffic config\
+  \ of Monash-University/monash_tsf has the following structure.\nHere is a description\
+  \ of the contents of each column including their name, what they contain, and the\
+  \ data type:\n ``` \n    {{\n        'label_target':  List(Value('float32')), #\
+  \ true future values for the time series (This is the scoring column to predict).\
+  \ It includes both the historical and future values concatenated together.\n   \
+  \     'target':  List(Value('float32')), # historical values for the time series\
+  \ (a string representation of a list of floats)\n    }} \n```\nTrain data can be\
+  \ loaded using:\n```python\n    from datasets import load_from_disk\n    load_from_disk('./data/train')\
+  \ \n```\nTest data can be loaded using:\n```python\n    from datasets import load_from_disk\n\
+  \    load_from_disk('./data/test').\n```\nNote that the scoring column has been\
+  \ removed from the test data.\n\n!!!IMPORTANT NOTE!!!\n    Some of the time series\
+  \ in this dataset contain NaN values. You should take this into account when building\
+  \ your model and making predictions.\n### Submission file\nThe submission file should\
+  \ be a csv file named `submission.csv` with the following header:\n``` label_target\
+  \ ```\nWhere each row contains your predicted future values (a string representation\
+  \ of a list of 59 floats) concatenated to the historical values all dumped as a\
+  \ string (using json.dumps for example) for the corresponding row in the test set.\n\
+  And it should be of shape (145063,).\n\n### Evaluation\nThe evaluation will be performed\
+  \ on the `submission.csv` file you have submitted using the average MASE (Mean Absolute\
+  \ Scaled Error) metric. Here is the evaluation script that will be used:\n```python\n\
+  \nfrom sktime.performance_metrics.forecasting import mean_absolute_scaled_error\n\
+  \ndef safe_literal_eval_with_nan(s):\n    import ast\n    import math\n    s_fixed\
+  \ = s.replace('NaN', 'None')\n    lst = ast.literal_eval(s_fixed)\n    return lst\n\
+  \ndef evaluate(predictions, labels):\n    \"\"\"\n    Returns a dict of metric_name\
+  \ -> value\n    \"\"\"\n    mases = []\n    test_ds = load_from_disk('./data/test_with_labels')\n\
+  \    train_targets = test_ds[\"target\"]\n\n    for pred, label, train_target in\
+  \ zip(predictions, labels, train_targets):\n        try:\n            pred = np.array(safe_literal_eval_with_nan(pred))\n\
+  \        except Exception as e:\n            raise ValueError(f\"Error parsing prediction:\
+  \ {{pred}}, with error {{e}}\") from e\n        label = np.array(label)\n      \
+  \  \n        if pred.shape != label.shape:\n            raise ValueError(\n    \
+  \            \"Invalid sample: \"\n                f\"Prediction shape {{pred.shape}}\
+  \ does not match \"\n                f\"label shape {{label.shape}}\"\n        \
+  \    )\n\n        train_size = np.array(train_target).shape[0]\n        # remove\
+  \ first train_size elements from pred and label\n        pred = pred[train_size:]\n\
+  \        label = label[train_size:]\n\n        #find any nans in label\n       \
+  \ mask = ~np.isnan(label)\n        pred = pred[mask]\n        label = label[mask]\n\
+  \n        mases.append(mean_absolute_scaled_error(label, pred, train_target))\n\n\
+  \    return {{\"MASE\": np.mean(mases)}}\n```\n\nYour csv submission will be loaded\
+  \ like this:\n```python\nimport pandas as pd\nsubmission_df = pd.read_csv(a.submission_file,\
+  \ header=0)\npreds = submission_df.values.squeeze()\n```\n    If a baseline is given,\
+  \ your task is to train a new model that improves performance on the given dataset\
+  \ as much as possible. If you fail to produce a valid submission artefact evaluation\
+  \ file will give you a score of 0.\n{dataset_docs}"
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: TimeSeriesForecastingKaggleWebTrafficMASE
+memory_path: data/TimeSeriesForecastingKaggleWebTrafficMASE/memory.json
+metric_lower_is_better: true
+name: TimeSeriesForecastingKaggleWebTrafficMASE
+requirements_path: data/TimeSeriesForecastingKaggleWebTrafficMASE/requirements.txt
+starter_code:
+- data/TimeSeriesForecastingKaggleWebTrafficMASE/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false

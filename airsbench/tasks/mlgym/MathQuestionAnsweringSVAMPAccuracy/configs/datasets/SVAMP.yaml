@@ -1,0 +1,25 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/MathQuestionAnsweringSVAMPAccuracy
+description:
+  Answer:
+    _type: Value
+    dtype: string
+  Body:
+    _type: Value
+    dtype: string
+  Equation:
+    _type: Value
+    dtype: string
+  ID:
+    _type: Value
+    dtype: string
+  Question:
+    _type: Value
+    dtype: string
+  Type:
+    _type: Value
+    dtype: string
+  question_concat:
+    _type: Value
+    dtype: string
+is_local: true
+name: SVAMP

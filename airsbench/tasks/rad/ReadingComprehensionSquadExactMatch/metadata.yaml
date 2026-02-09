@@ -1,0 +1,36 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+logging_info:
+  name: ReadingComprehensionSquadExactMatch
+  dataset: rajpurkar/squad
+  category: Question Answering
+  research_problem: Question Answering
+  output_type: Text generation
+  config: plain_text
+  train_split: train
+  test_split: validation
+  input_columns:
+    - title
+    - context
+    - question
+  scoring_column: answers
+  shape: (10570,)
+  custom_gold_labels: true
+  custom_rad_class: false
+  metric: ExactMatch
+  additional_metrics: null
+  sota:
+    - sota_paper_title: 'SplaXBERT: Leveraging Mixed Precision Training and Context Splitting for Question Answering'
+      sota_paper_url: https://arxiv.org/pdf/2412.05499
+      sota_score: 0.858
+      sota_year: 2024
+      sota_venue: Preprint
+  dataset_paper_url: https://arxiv.org/abs/1606.05250
+  estimated_worst_score: 0.0
+  optimal_score: 1.0

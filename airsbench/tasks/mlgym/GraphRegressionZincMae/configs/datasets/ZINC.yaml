@@ -1,0 +1,33 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/GraphRegressionZincMae
+description:
+  edge_attr:
+    _type: List
+    feature:
+      _type: List
+      feature:
+        _type: Value
+        dtype: int64
+  edge_index:
+    _type: List
+    feature:
+      _type: List
+      feature:
+        _type: Value
+        dtype: int64
+  node_feat:
+    _type: List
+    feature:
+      _type: List
+      feature:
+        _type: Value
+        dtype: int64
+  num_nodes:
+    _type: Value
+    dtype: int64
+  y:
+    _type: List
+    feature:
+      _type: Value
+      dtype: float64
+is_local: true
+name: ZINC

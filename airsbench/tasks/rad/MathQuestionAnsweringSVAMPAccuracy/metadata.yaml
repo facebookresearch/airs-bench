@@ -1,0 +1,32 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+logging_info:
+  name: MathQuestionAnsweringSVAMPAccuracy
+  category: Math
+  research_problem: Math Question Answering
+  output_type: text-generation
+  dataset: ChilleD/SVAMP
+  metric: Accuracy
+  input_columns:
+    - question_concat
+  scoring_column: Answer
+  shape: 300,1
+  config: default
+  train_split: train
+  test_split: test
+  custom_gold_labels: false
+  custom_rad_class: false
+  sota:
+    - sota_paper_title: 'Achieving >97% on GSM8K: Deeply Understanding the Problems Makes LLMs Better Solvers for Math Word Problems'
+      sota_paper_url: https://arxiv.org/pdf/2404.14963v5
+      sota_score: 0.942
+      sota_year: 2026
+      sota_venue: Frontiers of Computer Science
+  dataset_paper_url: https://arxiv.org/abs/2103.07191
+  estimated_worst_score: 0.0
+  optimal_score: 1.0

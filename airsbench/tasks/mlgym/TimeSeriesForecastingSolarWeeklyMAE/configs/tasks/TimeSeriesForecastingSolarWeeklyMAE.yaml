@@ -1,0 +1,93 @@
+dataset_configs:
+- datasets/monash_tsf.yaml
+description: "# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to complete the project's TASK following the instructions provided\
+  \ below.\n\n    TASK: This is a Time Series task to perform time series forecasting\
+  \ (5 weeks ahead) on Monash-University/monash_tsf. You will be provided with time\
+  \ series data (`target`), and will need to forecast the future values (5 weekly\
+  \ values). Your predictions will be scored against the `label_target` column of\
+  \ the test set.\n\n## Data\n### Dataset Description\nThe solar_weekly dataset provides\
+  \ weekly aggregated solar power generation and forecast data for a large set of\
+  \ simulated photovoltaic (PV) plants across the United States. The dataset captures\
+  \ the complex dynamics of solar power generation, including seasonal variations,\
+  \ weather-dependent fluctuations, and geographic diversity across different climate\
+  \ zones. The forecasting task is to predict the next 5 weeks of solar power generation\
+  \ for each plant using historical weekly generation data.\n\n### Dataset Structure\n\
+  The solar_weekly config of `Monash-University/monash_tsf` has the following structure.\n\
+  Here is a description of the contents of each column including their name, what\
+  \ they contain, and the data type:\n```\n{{\n'label_target': List(Value('float32')),\
+  \ # true future values for the time series (This is the scoring column to predict).\
+  \ It includes both the historical and future values concatenated together.\n'target':\
+  \ List(Value('float32')), # historical values for the time series (a string representation\
+  \ of a list of floats)\n}}\n```\nTrain data can be loaded using load_from_disk('./data/train')\
+  \ and test data can be loaded using load_from_disk('./data/test').\nNote that the\
+  \ scoring column has been removed from the test data.\n\n### Submission file\nThe\
+  \ submission file should be a csv file named `submission.csv` with the following\
+  \ header:\n``` label_target ```\n\nAnd it should be of shape `(137,)`.\n\n### Evaluation\n\
+  The evaluation will be performed on the `submission.csv` file you have submitted\
+  \ using the Mean Absolute Error (MAE) metric. Here is the evaluation script that\
+  \ will be used:\n\n```py\n#!/usr/bin/env python3\nimport argparse\nimport json\n\
+  import numpy as np\nimport pandas as pd\nimport ast\nfrom datasets import load_dataset,\
+  \ load_from_disk\nfrom sklearn.metrics import mean_absolute_error\n\n\ndef load_test_set():\n\
+  \n    dataset = load_from_disk('./data/test_with_labels')\n    return dataset[\"\
+  label_target\"]\n\ndef evaluate(predictions, labels):\n    \"\"\"\n    Returns a\
+  \ dict of metric_name -> value\n    \"\"\"\n    all_preds = []\n    all_labels =\
+  \ []\n    test_ds = load_from_disk('./data/test_with_labels')\n    train_targets\
+  \ = test_ds[\"target\"]\n\n    for pred, label, train_target in zip(predictions,\
+  \ labels, train_targets):\n        # Handle NaN values in prediction strings by\
+  \ replacing them with np.nan\n        pred_str = pred.replace('NaN', 'null').replace('nan',\
+  \ 'null')\n        try:\n            pred_list = json.loads(pred_str)\n        \
+  \    # Convert null values back to np.nan\n            pred_list = [np.nan if x\
+  \ is None else x for x in pred_list]\n            pred = np.array(pred_list)\n \
+  \       except json.JSONDecodeError:\n            # Fallback to ast.literal_eval\
+  \ if JSON parsing fails\n            pred = np.array(ast.literal_eval(pred))\n\n\
+  \        label = np.array(label)\n        train_size = np.array(train_target).shape[0]\n\
+  \n        # Extract forecast portion from full label sequence\n        label_forecast\
+  \ = label[train_size:]\n\n        # Predictions should already be 5-step forecasts\
+  \ from custom_labels.py\n        if pred.shape != label_forecast.shape:\n      \
+  \      raise ValueError(\n                f\"Invalid sample: Prediction shape {{pred.shape}}\
+  \ does not match \"\n                f\"forecast label shape {{label_forecast.shape}}.\
+  \ Expected {{5}} forecast steps.\"\n            )\n\n        all_preds.append(pred)\n\
+  \        all_labels.append(label_forecast)\n\n    all_preds = np.concatenate(all_preds)\n\
+  \    all_labels = np.concatenate(all_labels)\n\n    # Flatten arrays\n    all_preds_flat\
+  \ = all_preds.flatten()\n    all_labels_flat = all_labels.flatten()\n\n    # Remove\
+  \ NaN values - only evaluate on valid data points\n    valid_mask = ~(np.isnan(all_preds_flat)\
+  \ | np.isnan(all_labels_flat))\n\n    if not np.any(valid_mask):\n        raise\
+  \ ValueError(\"No valid (non-NaN) data points found for evaluation\")\n\n    valid_preds\
+  \ = all_preds_flat[valid_mask]\n    valid_labels = all_labels_flat[valid_mask]\n\
+  \n    mae = mean_absolute_error(valid_labels, valid_preds)\n    return {{\"MAE\"\
+  : mae}}\n\n\n\n\ndef _cli():\n    p = argparse.ArgumentParser(\n        description=\"\
+  Evaluate predictions\"\n    )\n    p.add_argument(\"--submission-file\", default=\"\
+  submission.csv\",\n                   help=\"Path to CSV file containing predictions.\"\
+  )\n    a = p.parse_args()\n\n    print(\"Loading test set labels...\")\n    labels\
+  \ = load_test_set()\n    n_test_samples = len(labels)\n    print(f\"Loaded {{n_test_samples}}\
+  \ labels.\")\n\n    print(f\"Loading predictions from: {{a.submission_file}}\")\n\
+  \    try:\n        # Assuming CSV has no header and contains only prediction values\n\
+  \        # Adjust if your submission format is different (e.g., has headers, specific\
+  \ columns)\n        submission_df = pd.read_csv(a.submission_file, header=0)\n \
+  \       preds = submission_df.values.squeeze()\n        if preds.shape[0] != n_test_samples:\n\
+  \            raise ValueError(\n                f\"Submission file row count ({{preds.shape[0]}})\
+  \ \"\n                f\"does not match test set size ({{n_test_samples}}).\"\n\
+  \            )\n        # Further shape validation could be added here against spec['shape_per_item']\n\
+  \        # e.g., if preds.shape[1:] != spec['shape_per_item']\n    except FileNotFoundError:\n\
+  \        p.error(f\"Submission file not found: {{a.submission_file}}\")\n    except\
+  \ Exception as e:\n        p.error(f\"Error loading submission_file: {{e}}\")\n\n\
+  \    print(\"Evaluating predictions...\")\n    result = evaluate(preds, labels)\n\
+  \n    print(\"\\n--- EVALUATION RESULT ---\")\n    print(json.dumps(result, indent=2))\n\
+  \nif __name__ == '__main__':\n    _cli()\n```\nIf a baseline is given, your task\
+  \ is to train a new model that improves performance on the given dataset as much\
+  \ as possible. If you fail to produce a valid submission artefact evaluation file\
+  \ will give you a score of 0.\n{dataset_docs}"
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: TimeSeriesForecastingSolarWeeklyMAE
+memory_path: data/TimeSeriesForecastingSolarWeeklyMAE/memory.json
+metric_lower_is_better: true
+name: TimeSeriesForecastingSolarWeeklyMAE
+requirements_path: data/TimeSeriesForecastingSolarWeeklyMAE/requirements.txt
+starter_code:
+- data/TimeSeriesForecastingSolarWeeklyMAE/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false

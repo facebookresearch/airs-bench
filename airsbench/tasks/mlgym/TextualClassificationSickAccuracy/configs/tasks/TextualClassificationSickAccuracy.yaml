@@ -1,0 +1,50 @@
+cleanup_eval_on_failure: false
+dataset_configs:
+- datasets/sick.yaml
+description: "\n# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to complete the project's TASK following the instructions provided\
+  \ below.\n\n    TASK: This is a NLP task to perform textual-entailment on RobZamp/sick.\
+  \ You will be provided with a pair of sentences, `sentence_A` and `sentence_B`,\
+  \ and will need to predict the entailment between the two (0 = entailment, 1 = neutral\
+  \ , 2 = contradiction). Your predictions will be scored against the `label` column\
+  \ of the test set.\n\n## Data\n### Dataset Structure\nThe default config of RobZamp/sick\
+  \ has the following structure.\nHere is a description of the contents of each column\
+  \ including their name, what they contain, and the data type:\n ``` \n    {{\n \
+  \       'label': 'label': ClassLabel(names=['entailment', 'neutral', 'contradiction']),\
+  \ # the entailment between the two sentences (0 = entailment, 1 = neutral , 2 =\
+  \ contradiction)\n        'sentence_A': Value('string'), # first sentence of the\
+  \ sentence pair\n        'sentence_B': Value('string') # second sentence of the\
+  \ sentence pair \n    }} \n```\nTrain data can be loaded using:\n```python\n   \
+  \ from datasets import load_from_disk\n    load_from_disk('./data/train') \n```\n\
+  Validation data can be loaded using:\n```python\n    from datasets import load_from_disk\n\
+  \    load_from_disk('./data/validation')\n```\nTest data can be loaded using:\n\
+  ```python\n    from datasets import load_from_disk\n    load_from_disk('./data/test').\n\
+  ```\nNote that the scoring column has been removed from the test data.\n### Submission\
+  \ file\nThe submission file should be a csv file named `submission.csv` with the\
+  \ following header:\n``` label ```\nWhere each row contains your predicted class\
+  \ for the corresponding row in the test set.\nAnd it should be of shape (4906,).\n\
+  \n### Evalution\nThe evaluation will be performed on the `submission.csv` file you\
+  \ have submitted using the Accuracy metric. Here is the evaluation script that will\
+  \ be used:\n```python\nfrom sklearn.metrics import accuracy_score\n\ndef evaluate(predictions,\
+  \ labels):\n    \"\"\"\n    Returns a dict of metric_name -> value\n    \"\"\"\n\
+  \    acc = accuracy_score(predictions, labels)\n    return {{\"Accuracy\": acc}}\n\
+  ```\n\nYour csv submission will be loaded like this:\n```python\nimport pandas as\
+  \ pd\nsubmission_df = pd.read_csv(a.submission_file, header=0)\npreds = submission_df.values.squeeze()\n\
+  ```\n    If a baseline is given, your task is to train a new model that improves\
+  \ performance on the given dataset as much as possible. If you fail to produce a\
+  \ valid submission artefact evaluation file will give you a score of 0.\n{dataset_docs}"
+eval_timeout: 3600
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: TextualClassificationSickAccuracy
+memory_path: data/TextualClassificationSickAccuracy/memory.json
+metric_lower_is_better: false
+name: TextualClassificationSickAccuracy
+requirements_path: data/TextualClassificationSickAccuracy/requirements.txt
+starter_code:
+- data/TextualClassificationSickAccuracy/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false
+use_separate_eval_container: true

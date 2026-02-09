@@ -1,0 +1,25 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/CodeGenerationAPPSPassAt5
+description:
+  difficulty:
+    _type: Value
+    dtype: string
+  input_output:
+    _type: Value
+    dtype: string
+  problem_id:
+    _type: Value
+    dtype: int64
+  question:
+    _type: Value
+    dtype: string
+  solutions:
+    _type: Value
+    dtype: string
+  starter_code:
+    _type: Value
+    dtype: string
+  url:
+    _type: Value
+    dtype: string
+is_local: true
+name: apps

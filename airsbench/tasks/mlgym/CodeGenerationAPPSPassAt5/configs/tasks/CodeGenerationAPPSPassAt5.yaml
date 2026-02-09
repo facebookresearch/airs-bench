@@ -1,0 +1,351 @@
+dataset_configs:
+- datasets/apps.yaml
+description: "# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to build a model that solves the project's TASK following the\
+  \ instructions provided below.\n\n    TASK: Your task is to generate five independent\
+  \ Python programs for each competitive-programming problem. Each program must read\
+  \ from standard input and write to standard output and is intended to solve the\
+  \ given problem completely. A prediction for a problem is considered correct if\
+  \ at least one of the five submitted programs passes all of the official hidden\
+  \ test cases. Your predictions will be scored using the Pass@5 metric, which measures\
+  \ the fraction of test problems solved by at least one of the five attempts.\n\n\
+  ## Data\n### Dataset Structure\nThe default config of the APPS dataset has the following\
+  \ structure.\nHere is a description of the contents of each column including their\
+  \ name, what they contain, and the data type:\n```\n{{\n  \"problem_id\": int, \
+  \             // Unique identifier of the problem\n  \"question\": string,     \
+  \        // Full natural-language statement of the problem\n  \"solutions\": string,\
+  \            // JSON-encoded list of known correct Python solutions; may be an empty\
+  \ string if none\n  \"input_output\": string,         // JSON-encoded dictionary\
+  \ of official test data; keys:\n                                  //   \"inputs\"\
+  : list of input strings,\n                                  //   \"outputs\": list\
+  \ of expected output strings,\n                                  //   \"fn_name\"\
+  : (optional) required function name\n  \"difficulty\": string,           // Difficulty\
+  \ label: \"introductory\", \"interview\", or \"competition\"\n  \"url\": string,\
+  \                  // Source URL of the problem statement\n  \"starter_code\": string\
+  \          // (Optional) starter template code; may be empty\n}}\n```\n\n> Note:\
+  \ Only the `question` and `starter_code` columns are provided in the test data.\
+  \ Ensure you preserve the original row order of the test set when producing predictions.\n\
+  \n\nTrain data can be loaded using:\n```python\nfrom datasets import load_from_disk\n\
+  train_dataset = load_from_disk('./data/train')\n```\n\nTest data can be loaded using:\n\
+  ```python\nfrom datasets import load_from_disk\ntest_dataset = load_from_disk('./data/test')\n\
+  ```\n\n\n### Submission file\nThe submission file should contain the selected answers\
+  \ for the test set. The submission file should be a csv file named `submission.csv`\
+  \ with the following header:\n```\ncode1,code2,code3,code4,code5\n```\n\nand shape\
+  \ `(5000, 5)` - one row per problem and five Python programs per row, aligned with\
+  \ the test set order.\n\nEach cell must contain valid Python source code as a single\
+  \ string. Do not include any extra columns or indices.\n\n### Evaluation\n\nThe\
+  \ evaluation will be performed on the `submission.csv` file you submit, using the\
+  \ **Pass@5** metric.\nFor each problem, all 5 submitted solutions are executed against\
+  \ **all test cases** (both public and private).\nA problem counts as correct if\
+  \ **at least one** of the 5 submissions passes **every** test case.\n\n---\n\n####\
+  \ Execution Environment\n\n* **Python version**: All code is executed with **Python\
+  \ 3.10**. Ensure compatibility with this version.\n\n---\n\n#### Resource Limits\n\
+  \n* **Time limit** \u2013 A fixed limit of about 4 seconds is applied to each test\
+  \ run using Python\u2019s `signal.alarm`.\n\n* **Memory limit** \u2013 Is set to\
+  \ the default operating-system memory limit.\n\nIf the program exceeds the time\
+  \ limit or any configured memory cap, it is interrupted and the test case fails.\n\
+  \n---\n\n#### Sandbox Restrictions (enforced automatically)\n\nSubmitted code runs\
+  \ with selected built-in operations disabled:\n\n* **No process creation or shell\
+  \ commands**\n  Functions such as `os.system`, `os.fork`, `os.kill`, and `subprocess.Popen`\
+  \ are replaced with harmless stubs.\n\n* **Limited file-system operations**\n  Destructive\
+  \ functions like `os.remove`, `shutil.rmtree`, and `os.rename` are disabled.\n\n\
+  * **Partial environment hardening**\n  Certain environment-changing operations (e.g.\
+  \ `os.putenv`, `os.chdir`) and some optional modules are disabled.\n\nThese protections\
+  \ mainly work by setting restricted functions to `None`.\nAttempting to call them\
+  \ typically raises a `TypeError`, causing the test to fail.\n\n---\n\n#### Code\
+  \ Safety Guidelines\n\n* Write code that **does not attempt** to access the internet,\
+  \ execute system commands, or write to arbitrary files.\n* Any such behavior may\
+  \ lead to **disqualification** even if it does not trigger runtime errors.\n\n---\n\
+  \nThis process ensures consistent, resource-aware, and fair evaluation of all submitted\
+  \ solutions.\n\n#### Evaluation Script\nEvaluation will be done using the following\
+  \ script:\n\n```py\nimport argparse, json, sys\nimport pandas as pd\nfrom datasets\
+  \ import load_from_disk\nimport json\nimport multiprocessing\nimport numpy as np\n\
+  from tqdm import tqdm\nfrom concurrent.futures import ThreadPoolExecutor, as_completed\n\
+  import faulthandler\n\n# used for debugging to time steps\nfrom datetime import\
+  \ datetime\n\n# to run the solution files we're using a timing based approach\n\
+  import signal\n\n# for capturing the stdout\nfrom io import StringIO\n# used for\
+  \ testing the code that reads from input\nfrom unittest.mock import patch, mock_open\n\
+  \nfrom pyext import RuntimeModule\n\nfrom enum import Enum\nclass CODE_TYPE(Enum):\n\
+  \    call_based = 0\n    standard_input = 1\n\n# stuff for setting up signal timer\n\
+  class TimeoutException(Exception):\n    pass\ndef timeout_handler(signum, frame):\n\
+  \    print(\"alarm went off\")\n    #return\n    raise TimeoutException\nsignal.signal(signal.SIGALRM,\
+  \ timeout_handler)\ntimeout = 4  # seconds\n\n# used to capture stdout as a list\n\
+  # from https://stackoverflow.com/a/16571630/6416660\n# alternative use redirect_stdout()\
+  \ from contextlib\nclass Capturing(list):\n    def __enter__(self):\n        self._stdout\
+  \ = sys.stdout\n        sys.stdout = self._stringio = StringIO()\n        # Make\
+  \ closing the StringIO a no-op\n        self._stringio.close = lambda x: 1\n   \
+  \     return self\n    def __exit__(self, *args):\n        self.extend(self._stringio.getvalue().splitlines())\n\
+  \        del self._stringio    # free up some memory\n        sys.stdout = self._stdout\n\
+  \n\ndef run_test(sample, test=None, debug=False):\n    \"\"\"\n    if test(generated_code)\
+  \ is not None it'll try to run the code.\n    otherwise it'll just return an input\
+  \ and output pair.\n    \"\"\"\n    # Disable functionalities that can make destructive\
+  \ changes to the test.\n\n    if debug:\n        print(f\"start = {{datetime.now().time()}}\"\
+  )\n\n    try:\n        in_outs = json.loads(sample[\"input_output\"])\n    except\
+  \ ValueError:\n        in_outs = None\n    if in_outs:\n        if in_outs.get(\"\
+  fn_name\") is None:\n            which_type = CODE_TYPE.standard_input  # Standard\
+  \ input\n            method_name = None\n        else:\n            which_type =\
+  \ CODE_TYPE.call_based  # Call-based\n            method_name = in_outs[\"fn_name\"\
+  ]\n\n    if debug:\n        print(f\"loaded input_output = {{datetime.now().time()}}\"\
+  )\n\n    if test is None:\n        return in_outs\n    elif test is not None:\n\
+  \        results = []\n        sol = \"import sys\\nimport time\\nimport itertools\\\
+  nfrom itertools import accumulate, product, permutations, combinations\\nimport\
+  \ collections\\nfrom collections import Counter, OrderedDict, deque, defaultdict,\
+  \ ChainMap\\nfrom functools import lru_cache\\nimport math\\nfrom math import sqrt,\
+  \ sin, cos, tan, ceil, fabs, floor, gcd, exp, log, log2\\nimport fractions\\nfrom\
+  \ typing import List, Tuple\\nimport numpy as np\\nimport random\\nimport heapq\\\
+  nfrom heapq import *\\n\"\n        if debug:\n            print(f\"loading test\
+  \ code = {{datetime.now().time()}}\")\n\n        if which_type == CODE_TYPE.call_based:\n\
+  \            sol += test\n            if debug:\n                print(f\"sol =\
+  \ {{sol}}\")\n            signal.alarm(timeout)\n            try:\n            \
+  \    tmp_sol = RuntimeModule.from_string(\"tmp_sol\", \"\", sol)\n             \
+  \   if \"class Solution\" not in test:\n                    tmp = tmp_sol\n    \
+  \            else:\n                    tmp = tmp_sol.Solution()\n             \
+  \   signal.alarm(0)\n            except Exception as e:\n                signal.alarm(0)\n\
+  \                if debug:\n                     print(f\"type 0 compilation error\
+  \ = {{e}}\")\n                results.append(-2)\n                return results\n\
+  \            signal.alarm(0)\n\n        elif which_type == CODE_TYPE.standard_input:\n\
+  \            # sol\n            tmp_test = test.split(\"\\n\")\n\n            new_test\
+  \ = []\n            for x in tmp_test:\n                if (not x.startswith(\"\
+  from \")) and (not x.startswith(\"import \")):\n                    new_test.append(\"\
+  \\t\" + x + \"\\n\")\n                else:\n                    new_test.append(x\
+  \ + \"\\n\")\n            tmp_test = new_test\n\n            new_test = \"\"\n \
+  \           started = False\n            for i in tmp_test:\n                if\
+  \ i.startswith(\"\\t\") and not started:\n                    new_test += \"stdin\
+  \ = sys.stdin\\nstdout = sys.stdout\\n\"\n                    new_test += \"def\
+  \ code():\\n\"\n                    new_test += i\n                    started =\
+  \ True\n                elif started and ((i.startswith(\"from \")) or (i.startswith(\"\
+  import \"))):\n                    new_test += \"\\t\" + i\n                else:\n\
+  \                    new_test += i\n            tmp_test = new_test\n\n        \
+  \    sol += tmp_test\n            if debug:\n                print(f\"sol = {{sol}}\"\
+  )\n            method_name = \"code\"\n            signal.alarm(timeout)\n     \
+  \       try:\n                tmp_sol = RuntimeModule.from_string(\"tmp_sol\", \"\
+  \", sol)\n                tmp = tmp_sol\n                signal.alarm(0)\n     \
+  \       except Exception as e:\n                signal.alarm(0)\n              \
+  \  if debug:\n                    print(f\"type 1 compilation error = {{e}}\")\n\
+  \                results.append(-2)\n                return results\n          \
+  \  signal.alarm(0)\n        if debug:\n            print(f\"get method = {{datetime.now().time()}}\"\
+  )\n\n        try:\n            method = getattr(tmp, method_name)  # get_attr second\
+  \ arg must be str\n        except:\n            signal.alarm(0)\n            e =\
+  \ sys.exc_info()\n            print(f\"unable to get function error = {{e}}\")\n\
+  \            results.append(-2)\n            return results\n\n        for index,\
+  \ inputs in enumerate(in_outs[\"inputs\"]):\n            # JSON forces dictionaries\
+  \ to have string keys; this undoes this (assuming a singleton list)\n          \
+  \  try:\n                if isinstance(inputs[0], dict):\n                    inputs\
+  \ = [{{int(k): v for k,v in inputs[0].items()}}]\n            except:\n        \
+  \        True\n            try:\n                if isinstance(in_outs[\"outputs\"\
+  ][index], dict):\n                    in_outs[\"outputs\"][index] = [{{int(k): v\
+  \ for k,v in in_outs[\"outputs\"][index].items()}}]\n            except:\n     \
+  \           True\n            try:\n                if isinstance(in_outs[\"outputs\"\
+  ][index][0], dict):\n                    in_outs[\"outputs\"][index] = [{{int(k):\
+  \ v for k,v in in_outs[\"outputs\"][index][0].items()}}]\n            except:\n\
+  \                True\n\n            if debug:\n                print(f\"time: {{datetime.now().time()}}\
+  \ testing index = {{index}}  inputs = {{inputs}}, {{type(inputs)}}. type = {{which_type}}\"\
+  )\n            if which_type == CODE_TYPE.call_based:  # Call-based\n          \
+  \      signal.alarm(timeout)\n                faulthandler.enable()\n          \
+  \      try:\n                    output = method(*inputs)\n\n                  \
+  \  # ground truth sequences are not tuples\n                    if isinstance(output,\
+  \ tuple):\n                        output = list(output)\n\n                   \
+  \ tmp_result = output == in_outs[\"outputs\"][index]\n                    if isinstance(in_outs[\"\
+  outputs\"][index], list) and in_outs[\"outputs\"][index]:\n                    \
+  \    tmp_result = tmp_result or (output == in_outs[\"outputs\"][index][0])\n\n \
+  \                   # ground truth sequences are not tuples\n                  \
+  \  try:\n                        if isinstance(output[0], tuple):\n            \
+  \                tmp_result = tmp_result or ([list(x) for x in output] == in_outs[\"\
+  outputs\"][index][0])\n                    except:\n                        True\n\
+  \                    results.append(tmp_result)\n\n                    # reset the\
+  \ alarm\n                    signal.alarm(0)\n                except Exception as\
+  \ e:\n                    signal.alarm(0)\n                    faulthandler.disable()\n\
+  \                    if debug:\n                        print(f\"Standard input\
+  \ runtime error or time limit exceeded error = {{e}}\")\n                    results.append(-1)\n\
+  \                    continue\n                faulthandler.disable()\n        \
+  \        signal.alarm(0)\n                if debug:\n                    print(f\"\
+  outputs = {{output}}, test outputs = {{in_outs['outputs'][index]}}, inputs = {{inputs}},\
+  \ {{type(inputs)}}, {{output == [in_outs['outputs'][index]]}}\")\n            elif\
+  \ which_type == CODE_TYPE.standard_input:  # Standard input\n                faulthandler.enable()\n\
+  \                signal.alarm(timeout)\n                passed = False\n\n     \
+  \           if isinstance(inputs, list):\n                    inputs = \"\\n\".join(inputs)\n\
+  \                if isinstance(in_outs['outputs'][index], list):\n             \
+  \       in_outs['outputs'][index] = \"\\n\".join(in_outs['outputs'][index])\n\n\
+  \                with Capturing() as output:\n                    try:\n       \
+  \                 call_method(method, inputs)\n                        # reset the\
+  \ alarm\n                        signal.alarm(0)\n                        passed\
+  \ = True\n                    except Exception as e:\n                        #\
+  \ runtime error or took too long\n                        signal.alarm(0)\n    \
+  \                    print(f\"Call-based runtime error or time limit exceeded error\
+  \ = {{repr(e)}}{{e}}\")\n                        results.append(-1)\n          \
+  \          signal.alarm(0)\n\n                if not passed:\n                 \
+  \   if debug:\n                        nl = \"\\n\"\n                        if\
+  \ not isinstance(inputs, list):\n                            print(f\"not passed\
+  \ output = {{output}}, test outputs = {{in_outs['outputs'][index]}}, inputs = {{inputs.replace(nl,'\
+  \ new-line ')}}, {{type(inputs)}}, {{output == [in_outs['outputs'][index]]}}\")\n\
+  \                        else:\n                            print(f\"not passed\
+  \ output = {{output}}, test outputs = {{in_outs['outputs'][index]}}, inputs = {{inputs}},\
+  \ {{type(inputs)}}, {{output == [in_outs['outputs'][index]]}}\")\n             \
+  \       continue\n\n                if passed and debug:\n                    print(f\"\
+  ==> output = {{output}}, test outputs = {{in_outs['outputs'][index]}}\")\n\n   \
+  \             if custom_compare_(output, in_outs['outputs'][index]):\n         \
+  \           tmp_result = True\n                    results.append(tmp_result)\n\
+  \                    continue\n\n                # ground truth sequences are expressed\
+  \ as lists not tuples\n                if isinstance(output, tuple):\n         \
+  \           output = list(output)\n\n                tmp_result = False\n      \
+  \          try:\n                    tmp_result = (output == [in_outs[\"outputs\"\
+  ][index]])\n                    if isinstance(in_outs[\"outputs\"][index], list):\n\
+  \                        tmp_result = tmp_result or (output == in_outs[\"outputs\"\
+  ][index])\n                        if isinstance(output[0], str):\n            \
+  \                tmp_result = tmp_result or ([e.strip() for e in output] == in_outs[\"\
+  outputs\"][index])\n                except Exception as e:\n                   \
+  \ if debug:\n                        print(f\"Failed check1 exception = {{e}}\"\
+  )\n                    pass\n\n                if tmp_result == True:\n        \
+  \            results.append(tmp_result)\n                    continue\n\n      \
+  \          # try one more time without \\n\n                if isinstance(in_outs[\"\
+  outputs\"][index], list):\n                    for tmp_index, i in enumerate(in_outs[\"\
+  outputs\"][index]):\n                        in_outs[\"outputs\"][index][tmp_index]\
+  \ = i.split(\"\\n\")\n                        in_outs[\"outputs\"][index][tmp_index]\
+  \ = [x.strip() for x in in_outs[\"outputs\"][index][tmp_index] if x]\n         \
+  \       else:\n                    in_outs[\"outputs\"][index] = in_outs[\"outputs\"\
+  ][index].split(\"\\n\")\n                    in_outs[\"outputs\"][index] = list(filter(len,\
+  \ in_outs[\"outputs\"][index]))\n                    in_outs[\"outputs\"][index]\
+  \ = list(map(lambda x:x.strip(), in_outs[\"outputs\"][index]))\n\n             \
+  \   try:\n                    tmp_result = (output == [in_outs[\"outputs\"][index]])\n\
+  \                    if isinstance(in_outs[\"outputs\"][index], list):\n       \
+  \                 tmp_result = tmp_result or (output == in_outs[\"outputs\"][index])\n\
+  \                except Exception as e:\n                    if debug:\n       \
+  \                 print(f\"Failed check2 exception = {{e}}\")\n                \
+  \    pass\n\n                if tmp_result == True:\n                    results.append(tmp_result)\n\
+  \                    continue\n\n                # try by converting the output\
+  \ into a split up list too\n                if isinstance(output, list):\n     \
+  \               output = list(filter(len, output))\n\n                if debug:\n\
+  \                    nl = \"\\n\"\n                    if not isinstance(inputs,\
+  \ list):\n                        print(f\"output = {{output}}, test outputs = {{in_outs['outputs'][index]}},\
+  \ inputs = {{inputs.replace(nl,' new-line ')}}, {{type(inputs)}}, {{output == [in_outs['outputs'][index]]}}\"\
+  )\n                    else:\n                        print(f\"output = {{output}},\
+  \ test outputs = {{in_outs['outputs'][index]}}, inputs = {{inputs}}, {{type(inputs)}},\
+  \ {{output == [in_outs['outputs'][index]]}}\")\n\n                if tmp_result\
+  \ == True:\n                    results.append(tmp_result)\n                   \
+  \ continue\n\n                try:\n                    tmp_result = (output ==\
+  \ [in_outs[\"outputs\"][index]])\n                    if isinstance(in_outs[\"outputs\"\
+  ][index], list):\n                        tmp_result = tmp_result or (output ==\
+  \ in_outs[\"outputs\"][index])\n                except Exception as e:\n       \
+  \             if debug:\n                        print(f\"Failed check3 exception\
+  \ = {{e}}\")\n                    pass\n\n                try:\n               \
+  \     output_float = [float(e) for e in output]\n                    gt_float =\
+  \ [float(e) for e in in_outs['outputs'][index]]\n                    tmp_result\
+  \ = tmp_result or ((len(output_float) == len(gt_float)) and np.allclose(output_float,\
+  \ gt_float))\n                except Exception as e:\n                    pass\n\
+  \                try:\n                    if isinstance(output[0], list):\n   \
+  \                     output_float = [float(e) for e in output[0]]\n           \
+  \             gt_float = [float(e) for e in in_outs['outputs'][index][0]]\n    \
+  \                    tmp_result = tmp_result or ((len(output_float) == len(gt_float))\
+  \ and np.allclose(output_float, gt_float))\n                except Exception as\
+  \ e:\n                    pass\n\n                if tmp_result == True:\n     \
+  \               results.append(tmp_result)\n                    continue\n\n   \
+  \             # try by converting the stuff into split up list\n               \
+  \ if isinstance(in_outs[\"outputs\"][index], list):\n                    for tmp_index,\
+  \ i in enumerate(in_outs[\"outputs\"][index]):\n                        in_outs[\"\
+  outputs\"][index][tmp_index] = set(i.split())\n                else:\n         \
+  \           in_outs[\"outputs\"][index] = set(in_outs[\"outputs\"][index].split())\n\
+  \n                try:\n                    tmp_result = (output == in_outs[\"outputs\"\
+  ][index])\n                except Exception as e:\n                    if debug:\n\
+  \                        print(f\"Failed check4 exception = {{e}}\")\n         \
+  \           continue\n\n                if tmp_result == True:\n               \
+  \     results.append(tmp_result)\n                    continue\n\n             \
+  \   # try by converting the output into a split up list too\n                if\
+  \ isinstance(output, list):\n                    for tmp_index, i in enumerate(output):\n\
+  \                        output[tmp_index] = i.split()\n                    output\
+  \ = list(filter(len, output))\n                    for tmp_index, i in enumerate(output):\n\
+  \                        output[tmp_index] = set(i)\n                else:\n   \
+  \                 output = output.split()\n                    output = list(filter(len,\
+  \ output))\n                    output = set(output)\n\n                try:\n \
+  \                   tmp_result = (set(frozenset(s) for s in output) == set(frozenset(s)\
+  \ for s in in_outs[\"outputs\"][index]))\n                except Exception as e:\n\
+  \                    if debug:\n                        print(f\"Failed check5 exception\
+  \ = {{e}}\")\n\n\n                # if they are all numbers, round so that similar\
+  \ numbers are treated as identical\n                try:\n                    tmp_result\
+  \ = tmp_result or (set(frozenset(round(float(t),3) for t in s) for s in output)\
+  \ ==\\\n                        set(frozenset(round(float(t),3) for t in s) for\
+  \ s in in_outs[\"outputs\"][index]))\n                except Exception as e:\n \
+  \                   if debug:\n                        print(f\"Failed check6 exception\
+  \ = {{e}}\")\n\n                if tmp_result == True and debug:\n             \
+  \       print(\"PASSED\")\n\n                results.append(tmp_result)\n\n    \
+  \            if debug:\n                    nl = \"\\n\"\n                    if\
+  \ not isinstance(inputs, list):\n                        print(f\"output = {{output}},\
+  \ test outputs = {{in_outs['outputs'][index]}}, inputs = {{inputs.replace(nl,' new-line\
+  \ ')}}, {{type(inputs)}}, {{output == [in_outs['outputs'][index]]}}\")\n       \
+  \             else:\n                        print(f\"output = {{output}}, test\
+  \ outputs = {{in_outs['outputs'][index]}}, inputs = {{inputs}}, {{type(inputs)}},\
+  \ {{output == [in_outs['outputs'][index]]}}\")\n\n\n    return results\n\n\ndef\
+  \ custom_compare_(output, ground_truth):\n\n    if isinstance(output, list):\n \
+  \       output_1 = \"\\n\".join(output)\n        if stripped_string_compare(output_1,\
+  \ ground_truth):\n            return True\n\n    if isinstance(output, list):\n\
+  \        output_2 = [o.lstrip().rstrip() for o in output]\n        output_2 = \"\
+  \\n\".join(output_2)\n        if stripped_string_compare(output_2, ground_truth):\n\
+  \            return True\n\n    return False\n\ndef stripped_string_compare(s1,\
+  \ s2):\n    s1 = s1.lstrip().rstrip()\n    s2 = s2.lstrip().rstrip()\n    return\
+  \ s1 == s2\n\ndef call_method(method, inputs):\n\n    if isinstance(inputs, list):\n\
+  \        inputs = \"\\n\".join(inputs)\n\n    inputs_line_iterator = iter(inputs.split(\"\
+  \\n\"))\n\n    # sys.setrecursionlimit(10000)\n\n    # @patch('builtins.input',\
+  \ side_effect=inputs.split(\"\\n\"))\n    @patch('builtins.open', mock_open(read_data=inputs))\n\
+  \    @patch('sys.stdin', StringIO(inputs))\n    @patch('sys.stdin.readline', lambda\
+  \ *args: next(inputs_line_iterator))\n    @patch('sys.stdin.readlines', lambda *args:\
+  \ inputs.split(\"\\n\"))\n    @patch('sys.stdin.read', lambda *args: inputs)\n \
+  \   # @patch('sys.stdout.write', print)\n    def _inner_call_method(_method):\n\
+  \        try:\n            return _method()\n        except SystemExit as e:\n \
+  \           pass\n        finally:\n            pass\n    return _inner_call_method(method)\n\
+  \n\ndef solves_testcases(submission, testcases, verbose=False):\n    \"\"\"\n  \
+  \  Write submission once to a temp file and run it against all testcases.\n    \"\
+  \"\"\n    timeout = 10\n\n    def _temp_run(sample, generation, debug, result):\n\
+  \        result.append(run_test(sample, test=generation, debug=debug))\n\n    manager\
+  \ = multiprocessing.Manager()\n    result = manager.list()\n    p = multiprocessing.Process(\n\
+  \        target=_temp_run,\n        args=(testcases, submission, verbose, result)\n\
+  \    )\n    p.start()\n    p.join(timeout=timeout + 1)\n    if p.is_alive():\n \
+  \       p.kill()\n    if not result:\n        in_outs = json.loads(testcases[\"\
+  input_output\"])\n        # consider that all tests failed\n        result = [[-1\
+  \ for i in range(len(in_outs[\"inputs\"]))]]\n        if verbose:\n            print(\"\
+  global timeout\")\n    fixed = []\n    for e in result:\n        if isinstance(e,\
+  \ np.ndarray):\n            e = e.item(0)\n        if isinstance(e, np.bool_):\n\
+  \            e = bool(e)\n        fixed.append(e)\n    return np.all(fixed)\n\n\n\
+  def _passes_any_submission(submissions, testcases, verbose=False):\n    for submission\
+  \ in submissions:\n        if solves_testcases(submission, testcases, verbose):\n\
+  \            return 1  # counts as correct\n    return 0\n\n\ndef evaluate_all_testcases(submissions_all,\
+  \ testcases_all, verbose=False, max_workers=None):\n    assert len(submissions_all)\
+  \ == len(testcases_all), \"Number of submissions and testcases do not match\"\n\
+  \    total = len(submissions_all)\n    with ThreadPoolExecutor(max_workers=max_workers)\
+  \ as ex:\n        futures = [\n            ex.submit(_passes_any_submission, submissions,\
+  \ testcases, verbose)\n            for submissions, testcases in zip(submissions_all,\
+  \ testcases_all)\n        ]\n        correct = 0\n        for fut in tqdm(as_completed(futures),\
+  \ total=total):\n            correct += fut.result()\n\n    return correct / total\n\
+  \n\ndef load_testcases(path=\"./data/test_with_labels\"):\n    \"\"\"\n    Load\
+  \ testcases for evaluation.\n    \"\"\"\n    ds = load_from_disk(path)\n    return\
+  \ ds\n\n\ndef evaluate(submissions, testcases):\n    \"\"\"\n    Compute Pass@5\
+  \ metric for a list of submissions and testcases.\n    \"\"\"\n    passAt5 = evaluate_all_testcases(submissions,\
+  \ testcases)\n    return {{\"Pass@5\": passAt5}}\n\n\ndef _cli():\n    p = argparse.ArgumentParser(description=\"\
+  Evaluate Pass@5 using submission.csv\")\n    p.add_argument(\"--submission-file\"\
+  , required=True,\n                   help=\"Path to CSV with columns code1..code5\"\
+  )\n    a = p.parse_args()\n\n    print(\"Loading test set\u2026\")\n    testcases\
+  \ = load_testcases()\n    n_test_samples = len(testcases)\n\n    print(f\"Loading\
+  \ submissions from: {{a.submission_file}}\")\n    submission_df = pd.read_csv(a.submission_file,\
+  \ header=0)\n    submission_scripts = submission_df[[f'code{{i}}' for i in range(1,\
+  \ 6)]].values.tolist()\n    n_submissions = len(submission_scripts)\n    assert\
+  \ n_submissions == n_test_samples, f\"Submission file row count ({{n_submissions}})\
+  \ does not match test set size ({{n_test_samples}}).\"\n\n    print(\"Evaluating\
+  \ Pass@5\u2026\")\n    result = evaluate(submission_scripts, testcases)\n\n    print(\"\
+  \\n--- EVALUATION RESULT ---\")\n    print(json.dumps(result, indent=2))\n\n\nif\
+  \ __name__ == \"__main__\":\n    _cli()\n\n```\nIf a baseline is given, your task\
+  \ is to train a new model that improves performance on the given dataset as much\
+  \ as possible. If you fail to produce a valid submission artefact evaluation file\
+  \ will give you a score of 0.\n{dataset_docs}"
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: CodeGenerationAPPSPassAt5
+memory_path: data/CodeGenerationAPPSPassAt5/memory.json
+metric_lower_is_better: false
+name: CodeGenerationAPPSPassAt5
+requirements_path: data/CodeGenerationAPPSPassAt5/requirements.txt
+starter_code:
+- data/CodeGenerationAPPSPassAt5/evaluate.py
+- data/CodeGenerationAPPSPassAt5/utils.py
+- data/CodeGenerationAPPSPassAt5/testing_util.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false

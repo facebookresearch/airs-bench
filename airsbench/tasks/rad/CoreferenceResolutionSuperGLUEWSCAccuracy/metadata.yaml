@@ -1,0 +1,41 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+  - pandas
+  - numpy
+  - torch
+logging_info:
+  name: CoreferenceResolutionSuperGLUEWSCAccuracy
+  category: Text Extraction and Matching
+  research_problem: Coreference Resolution
+  output_type: Text classification
+  dataset: aps/super_glue
+  config: wsc
+  metric: Accuracy
+  input_columns:
+    - text
+    - span1_index
+    - span2_index
+    - span1_text
+    - span2_text
+  scoring_column: label
+  train_split: train
+  test_split: validation
+  shape: (104,1)
+  custom_gold_labels: false
+  custom_rad_class: false
+  sota:
+    - sota_paper_title: 'ExT5: Towards Extreme Multi-Task Scaling for Transfer Learning'
+      sota_paper_url: https://arxiv.org/pdf/2111.10952
+      sota_score: 0.962
+      sota_notes: Uses T5-Large as backbone which has 770 million parameters.
+      sota_year: 2022
+      sota_venue: ICLR
+  dataset_paper_url: https://arxiv.org/abs/1905.00537
+  estimated_worst_score: 0.3653846154
+  optimal_score: 1.0

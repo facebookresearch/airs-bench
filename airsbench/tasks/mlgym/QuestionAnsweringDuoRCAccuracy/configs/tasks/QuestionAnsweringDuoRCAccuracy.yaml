@@ -1,0 +1,103 @@
+cleanup_eval_on_failure: false
+dataset_configs:
+- datasets/duorc.yaml
+description: "# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to build a model that solves the project's TASK following the\
+  \ instructions provided below.\n\nTASK: Your task is to answer questions given a\
+  \ large context. You will be provided a title of a story and context surrounding\
+  \ its plot, then will be asked a question for which you should retrieve the answer\
+  \ from the context. Your predictions will be scored against a list of candidate\
+  \ answers provided in the `answers` column of the test.\n\n## Data\n### Dataset\
+  \ Structure\nThe default config of the DuoRC dataset has the following structure.\n\
+  Here is a description of the contents of each column including their name, what\
+  \ they contain, and the data type:\n```\n{{\n    \"plot_id\": string, # The ID of\
+  \ the story\n    \"plot\": string,  # The plot of the story\n    \"title\": string,\
+  \  # The title of the story\n    \"question\": string,  # A question regarding a\
+  \ detail that may or may not be provided by the story\n    \"answers\": list[string],\
+  \   # A list of candidate answers to the question\n    \"no_answer\": bool,   #\
+  \ A boolean indicating whether the question has no answer in the context.\n}}\n\
+  ```\n\nAn example entry in the train dataset contains the following:\n- `plot_id`:\
+  \ \"/m/03vyhn\"\n- `plot`: \"Set in the second half of the 22nd century, Mars has\
+  \ been 84% terraformed, allowing humans to walk on the surface without pressure\
+  \ suits. Martian society has become matriarchal, with women in most positions of\
+  \ authority. The story concerns police officer Melanie Ballard (Natasha Henstridge),\
+  \ second in command of a team alongside Sergeant Jericho (Jason Statham) sent to\
+  \ a remote mining outpost to transport prisoner Desolation Williams (Ice Cube).\
+  \ Arriving at the remote mining town, Ballard finds all of the people missing. She\
+  \ learns that they had discovered an underground doorway created by an ancient Martian\
+  \ civilization.\"\n- `title`: \"Ghosts of Mars\"\n- `question`: \"Who is colonized\
+  \ by a high tech company?\"\n- `answers`: [\"Humans on Mars\", \"Mars\"]\n- `no_answer`:\
+  \ false\n\n> Note: The `answers` and `no_answer` columns are not available in the\
+  \ test set provided. Ensure you preserve the original row order of the test set\
+  \ when producing predictions.\n\n\nTrain data can be loaded using:\n```python\n\
+  from datasets import load_from_disk\ntrain_dataset = load_from_disk('./data/train')\n\
+  ```\n\nValidation data can be loaded using:\n```python\nfrom datasets import load_from_disk\n\
+  test_dataset = load_from_disk('./data/validation')\n```\n\nTest data can be loaded\
+  \ using:\n```python\nfrom datasets import load_from_disk\ntest_dataset = load_from_disk('./data/test')\n\
+  ```\n\n\n### Submission file\nThe submission file should contain the selected answers\
+  \ for the test set. The submission file should be a csv file named `submission.csv`\
+  \ with the following header:\n```\nhas_answer, answer\n```\n\nAnd it should be of\
+  \ shape `(15857, 2)` \u2014 one prediction per row, aligned with the test set order.\n\
+  \nThe `has_answer` column should produce a `true` or `false` value indicating whether\
+  \ the question has an answer provided in the supporting context.\nThe `answer` column\
+  \ should contain the answer if the `has_answer` column is true. If `has_answer`\
+  \ is false, any text in the `answer` column is ignored.\nDo not include any extra\
+  \ columns or indices.\n\n### Evalution\nThe evaluation will be performed on the\
+  \ `submission.csv` file you have submitted using the Accuracy metric. For each question,\
+  \ if the submitted `has_answer` is `false`, the prediction is only considered correct\
+  \ if the `no_answer` label is `true`. If the submitted `has_answer` is `true`, the\
+  \ prediction is only considered correct if the `no_answer` label is `false` and\
+  \ the submitted `answer` is an exact match of one of the `answers` in the label.\n\
+  \nEvaluation will be done using the following script:\n```py\nimport argparse, json\n\
+  import numpy as np\nimport pandas as pd\nfrom datasets import load_from_disk\n\n\
+  \ndef load_test_answers(path='./data/test_with_labels'):\n    \"\"\"\n    Load answers\
+  \ for evaluation (string labels).\n    \"\"\"\n    ds = load_from_disk(path)\n \
+  \   labels = list(ds[\"answer\"])\n    no_answers = list(ds[\"no_answers\"])\n \
+  \   return labels, no_answers\n\ndef is_correct_answer(submission, candidate_answers):\n\
+  \    submission = submission.lower()\n    for candidate_answer in candidate_answers:\n\
+  \        if candidate_answer.lower() == submission:\n            return True\n \
+  \   return False\n\ndef evaluate(submission_answers, submission_has_answers, label_answers,\
+  \ label_no_answers):\n    \"\"\"\n    Returns a dict of metric_name -> value\n \
+  \   \"\"\"\n    correct = 0\n    total = 0\n    for submission_answer, submission_has_answer,\
+  \ label_answer, label_no_answer in zip(\n        submission_answers, submission_has_answers,\
+  \ label_answers, label_no_answers\n    ):\n        total += 1\n        if not submission_has_answer:\n\
+  \            correct += label_no_answer\n        else:\n            correct += is_correct_answer(answer(submission_answer,\
+  \ label_answer))\n    return {{\"Accuracy\": correct/total}}\n\n\ndef _cli():\n\
+  \    p = argparse.ArgumentParser(\n        description=\"Evaluate predictions for\
+  \ DuoRC test split using Accuracy.\"\n    )\n    p.add_argument(\"--submission-file\"\
+  , default=\"submission.csv\",\n                   help=\"Path to CSV file containing\
+  \ predictions.\")\n    a = p.parse_args()\n\n    print(\"Loading test set labels...\"\
+  )\n    label_answers, label_no_answers = load_test_answers()\n    n_test_samples\
+  \ = len(label_answers)\n    print(f\"Loaded {{n_test_samples}} labels.\")\n\n  \
+  \  print(f\"Loading predictions from: {{a.submission_file}}\")\n    try:\n     \
+  \   # Assuming CSV has no header and contains only prediction values\n        #\
+  \ Adjust if your submission format is different (e.g., has headers, specific columns)\n\
+  \        submission_df = pd.read_csv(a.submission_file, header=0)\n        submission_answers\
+  \ = list(submission_df[\"answer\"])\n        submission_has_answers = list(submission_df[\"\
+  has_answer\"])\n        if len(submission_answers) != n_test_samples:\n        \
+  \    raise ValueError(\n                f\"Submission file row count ({{len(submission_answers)}})\
+  \ \"\n                f\"does not match test set size ({{n_test_samples}}).\"\n\
+  \            )\n    except FileNotFoundError:\n        p.error(f\"Submission file\
+  \ not found: {{a.submission_file}}\")\n    except Exception as e:\n        p.error(f\"\
+  Error loading submission_file: {{e}}\")\n\n    print(\"Evaluating predictions...\"\
+  )\n    result = evaluate(submission_answers, submission_has_answers, label_answers,\
+  \ label_no_answers)\n\n    print(\"\\n--- EVALUATION RESULT ---\")\n    print(json.dumps(result,\
+  \ indent=2))\n\n\nif __name__ == '__main__':\n    _cli()\n```\nIf a baseline is\
+  \ given, your task is to train a new model that improves performance on the given\
+  \ dataset as much as possible. If you fail to produce a valid submission artefact\
+  \ evaluation file will give you a score of 0.\n{dataset_docs}"
+eval_timeout: 3600
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: QuestionAnsweringDuoRCAccuracy
+memory_path: data/QuestionAnsweringDuoRCAccuracy/memory.json
+metric_lower_is_better: false
+name: QuestionAnsweringDuoRCAccuracy
+requirements_path: data/QuestionAnsweringDuoRCAccuracy/requirements.txt
+starter_code:
+- data/QuestionAnsweringDuoRCAccuracy/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false
+use_separate_eval_container: true

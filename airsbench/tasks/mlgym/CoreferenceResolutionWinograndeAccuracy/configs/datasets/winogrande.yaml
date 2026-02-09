@@ -1,0 +1,16 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/CoreferenceResolutionWinograndeAccuracy
+description:
+  answer:
+    _type: Value
+    dtype: string
+  option1:
+    _type: Value
+    dtype: string
+  option2:
+    _type: Value
+    dtype: string
+  sentence:
+    _type: Value
+    dtype: string
+is_local: true
+name: winogrande

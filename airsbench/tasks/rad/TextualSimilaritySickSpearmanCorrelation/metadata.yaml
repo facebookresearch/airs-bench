@@ -1,0 +1,38 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+  - pandas
+  - numpy
+  - scipy
+logging_info:
+  name: TextualSimilaritySickSpearmanCorrelation
+  dataset: RobZamp/sick
+  category: Text Extraction and Matching
+  research_problem: Textual Similarity
+  output_type: Textual Similarity
+  config: default
+  train_split: train
+  test_split: test
+  input_columns:
+    - sentence_A
+    - sentence_B
+  scoring_column: relatedness_score
+  shape: (4906,)
+  custom_gold_labels: false
+  custom_rad_class: false
+  metric: SpearmanCorrelation
+  additional_metrics: null
+  sota:
+    - sota_paper_title: 'CoSENT: Consistent Sentence Embedding via Similarity Ranking'
+      sota_paper_url: https://penghao-bdsc.github.io/papers/CoSENT_TASLP2024.pdf
+      sota_score: 0.854
+      sota_year: 2024
+      sota_venue: IEEE/ACM Transactions on Audio, Speech and Language Processing
+  dataset_paper_url: https://arxiv.org/abs/1404.3648
+  estimated_worst_score: -0.0100639174
+  optimal_score: 1.0

@@ -1,0 +1,39 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+  - pandas
+  - numpy
+  - torch
+logging_info:
+  name: CoreferenceResolutionWinograndeAccuracy
+  category: Text Extraction and Matching
+  research_problem: Coreference Resolution
+  output_type: Text Classification
+  dataset: allenai/winogrande
+  config: winogrande_xl
+  metric: Accuracy
+  input_columns:
+    - sentence
+    - option1
+    - option2
+  scoring_column: answer
+  train_split: train
+  test_split: validation
+  shape: [1531]
+  custom_gold_labels: false
+  custom_rad_class: false
+  sota:
+    - sota_paper_title: 'TTTTTackling WinoGrande Schemas'
+      sota_paper_url: https://arxiv.org/pdf/2003.08380
+      sota_score: 0.854
+      sota_notes: "SOTA paper use the 3B paramter T5 Model as the backbone, finetuned using the Google Colab TPU v2."
+      sota_year: 2020
+      sota_venue: Preprint
+  dataset_paper_url: https://arxiv.org/abs/1907.10641
+  estimated_worst_score: 0.4869771113
+  optimal_score: 1.0

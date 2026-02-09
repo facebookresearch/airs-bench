@@ -1,0 +1,76 @@
+dataset_configs:
+- datasets/ZINC.yaml
+description: "\n# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to complete the project's TASK following the instructions provided\
+  \ below.\n\n    TASK: This is a Molecules, proteins etc task to perform Graph Regression\
+  \ on graphs-datasets/ZINC. Your predictions will be scored against the y column\
+  \ of the test set.\n\n## Data\n### Dataset Structure\nThe default config of graphs-datasets/ZINC\
+  \ has the following structure.\nHere is a description of the contents of each column\
+  \ including their name, what they contain, and the data type:\n ``` {{'node_feat':\
+  \ List(List(Value('int64'))), 'edge_index': List(List(Value('int64'))), 'edge_attr':\
+  \ List(List(Value('int64'))), 'y': List(Value('float64')), 'num_nodes': Value('int64')}}\
+  \ ```\nTrain data can be loaded using load_from_disk('./data/train') and test data\
+  \ can be loaded using load_from_disk('./data/test').\nNote that the scoring column\
+  \ `y` has been removed from the test data.\n### Submission file\nThe submission\
+  \ file should be a csv file named `submission.csv` with the following header:\n\
+  ``` y ```\n\nAnd it should be of shape (5000,).\n\n### Evalution\nThe evaluation\
+  \ will be performed on the `submission.csv` file you have submitted using the MAE\
+  \ metric. Here is the evaluation script that will be used:\n```\n#!/usr/bin/env\
+  \ python3\nimport argparse, json\nimport ast\nimport numpy as np\nimport pandas\
+  \ as pd\nimport torch\nfrom datasets import load_dataset, load_from_disk\n\n\ndef\
+  \ load_test_set():\n\n    dataset = load_from_disk('./data/test_with_labels')\n\
+  \    return np.array(dataset[\"y\"])\n\n\n\ndef evaluate(predictions, labels):\n\
+  \    \"\"\"\n    Compute Mean Absolute Error (MAE) for graph regression on ZINC.\n\
+  \    Returns only {{\"Mae\": score}}.\n    \"\"\"\n    # Convert to numeric numpy\
+  \ arrays\n    clean_predictions = []\n    for p in predictions:\n        if isinstance(p,\
+  \ str):\n            parsed = ast.literal_eval(p)  # safely turns \"[0.95]\" into\
+  \ a Python list [0.95]\n            if isinstance(parsed, list):\n             \
+  \   clean_predictions.append(parsed[0])  # take the first element if it's a single-item\
+  \ list\n            else:\n                clean_predictions.append(float(parsed))\n\
+  \        else:\n            clean_predictions.append(float(p))\n    predictions\
+  \ = clean_predictions\n    y_true = np.asarray(labels, dtype=float)\n    y_pred\
+  \ = np.asarray(predictions, dtype=float)\n\n    # Squeeze trailing singleton dims\
+  \ (e.g., shape (N,1) -> (N,))\n    if y_pred.ndim > 1 and y_pred.shape[1] == 1:\n\
+  \        y_pred = y_pred.squeeze(-1)\n    if y_true.ndim > 1 and y_true.shape[1]\
+  \ == 1:\n        y_true = y_true.squeeze(-1)\n\n    if y_pred.shape != y_true.shape:\n\
+  \        raise ValueError(\n            f\"Shape mismatch: predictions {{y_pred.shape}}\
+  \ vs labels {{y_true.shape}}\"\n        )\n\n    if not np.all(np.isfinite(y_pred)):\n\
+  \        raise ValueError(\"Predictions contain non-finite values (NaN/Inf).\")\n\
+  \    if not np.all(np.isfinite(y_true)):\n        raise ValueError(\"Labels contain\
+  \ non-finite values (NaN/Inf).\")\n\n    mae = float(np.mean(np.abs(y_pred - y_true)))\
+  \ if y_true.size > 0 else 0.0\n    return {{\"MAE\": mae}}\n\n\n\ndef _cli():\n\
+  \    p = argparse.ArgumentParser(\n        description=\"Evaluate predictions\"\n\
+  \    )\n    p.add_argument(\"--submission-file\", default=\"submission.csv\",\n\
+  \                   help=\"Path to CSV file containing predictions.\")\n    a =\
+  \ p.parse_args()\n\n    print(\"Loading test set labels...\")\n    labels = load_test_set()\n\
+  \    n_test_samples = len(labels)\n    print(f\"Loaded {{n_test_samples}} labels.\"\
+  )\n\n    print(f\"Loading predictions from: {{a.submission_file}}\")\n    try:\n\
+  \        # Assuming CSV has no header and contains only prediction values\n    \
+  \    # Adjust if your submission format is different (e.g., has headers, specific\
+  \ columns)\n        submission_df = pd.read_csv(a.submission_file, header=0)\n \
+  \       preds = submission_df.values.squeeze()\n        if preds.shape[0] != n_test_samples:\n\
+  \            raise ValueError(\n                f\"Submission file row count ({{preds.shape[0]}})\
+  \ \"\n                f\"does not match test set size ({{n_test_samples}}).\"\n\
+  \            )\n        # Further shape validation could be added here against spec['shape_per_item']\n\
+  \        # e.g., if preds.shape[1:] != spec['shape_per_item']\n    except FileNotFoundError:\n\
+  \        p.error(f\"Submission file not found: {{a.submission_file}}\")\n    except\
+  \ Exception as e:\n        p.error(f\"Error loading submission_file: {{e}}\")\n\n\
+  \    print(\"Evaluating predictions...\")\n    result = evaluate(preds, labels)\n\
+  \n    print(\"\\n--- EVALUATION RESULT ---\")\n    print(json.dumps(result, indent=2))\n\
+  \nif __name__ == '__main__':\n    _cli()\n\n```If a baseline is given, your task\
+  \ is to train a new model that improves performance on the given dataset as much\
+  \ as possible. If you fail to produce a valid submission artefact evaluation file\
+  \ will give you a score of 0.\n{dataset_docs}"
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: GraphRegressionZincMae
+memory_path: data/GraphRegressionZincMae/memory.json
+metric_lower_is_better: true
+name: GraphRegressionZincMae
+requirements_path: data/GraphRegressionZincMae/requirements.txt
+starter_code:
+- data/GraphRegressionZincMae/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false

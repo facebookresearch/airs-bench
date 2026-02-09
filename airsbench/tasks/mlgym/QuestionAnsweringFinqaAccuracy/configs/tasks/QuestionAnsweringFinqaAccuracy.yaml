@@ -1,0 +1,92 @@
+dataset_configs:
+- datasets/finqa.yaml
+description: "\n# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to complete the project's TASK following the instructions provided\
+  \ below.\n\n    TASK: This is a NLP task to perform Question Answering on dreamerdeo/finqa.\
+  \ Your predictions will be scored against the answer column of the test set.\n\n\
+  ## Data\n### Dataset Structure\nThe default config of dreamerdeo/finqa has the following\
+  \ structure.\nHere is a description of the contents of each column including their\
+  \ name, what they contain, and the data type:\n ``` {{ 'post_text': List(Value('string')),\
+  \ 'pre_text': List(Value('string')), 'question': Value('string'), 'table': List(List(Value('string')))}}\
+  \ ```\nTrain data can be loaded using load_from_disk('./data/train') and test data\
+  \ can be loaded using load_from_disk('./data/test').\nNote that the scoring column\
+  \ has been removed from the test data.\n### Submission file\nThe submission file\
+  \ should be a csv file named `submission.csv` with the following header:\n``` answer\
+  \ ```\n\nAnd it should be of shape (1147,).\n\n### Evalution\nThe evaluation will\
+  \ be performed on the `submission.csv` file you have submitted using the Accuracy\
+  \ metric. Here is the evaluation script that will be used:\n```\n#!/usr/bin/env\
+  \ python3\nimport argparse, json\nimport numpy as np\nimport pandas as pd\nimport\
+  \ torch\nfrom datasets import load_dataset, load_from_disk\n\n\ndef load_test_set():\n\
+  \n    dataset = load_from_disk('./data/test_with_labels')\n    return np.array(dataset[\"\
+  answer\"])\n\n\n\ndef evaluate(predictions, labels):\n    \"\"\"\n    Compute QA\
+  \ accuracy for dreamerdeo/finqa.\n    Returns only {{\"Accuracy\": accuracy}}.\n\
+  \n    Matching rules:\n      - If both prediction and label parse as numbers (after\
+  \ stripping currency\n        symbols, commas, spaces; handling negatives in parentheses;\
+  \ converting\n        percents), compare numerically with tolerance.\n      - Otherwise,\
+  \ compare normalized strings (lowercased, trimmed, collapsed\n        whitespace).\n\
+  \    \"\"\"\n\n    def is_nan(x):\n        return x is None or (isinstance(x, float)\
+  \ and np.isnan(x))\n\n    def normalize_text(s: str) -> str:\n        s = str(s).strip().lower()\n\
+  \        # Collapse internal whitespace\n        s = \" \".join(s.split())\n   \
+  \     return s\n\n    def to_number(s: str):\n        \"\"\"\n        Try to parse\
+  \ a string into a float.\n        - Removes currency symbols and commas.\n     \
+  \   - Handles negatives in parentheses: (123) -> -123\n        - Handles percent:\
+  \ '5%' -> 0.05\n        Returns float or None if parsing fails.\n        \"\"\"\n\
+  \        if s is None:\n            return None\n        ss = str(s).strip()\n \
+  \       if ss == \"\":\n            return None\n\n        neg = False\n       \
+  \ # Handle negatives in parentheses, e.g., \"(1,234.56)\"\n        if ss.startswith(\"\
+  (\") and ss.endswith(\")\"):\n            neg = True\n            ss = ss[1:-1].strip()\n\
+  \n        # Remove currency symbols and spaces\n        ss = ss.replace(\"$\", \"\
+  \").replace(\"\xA3\", \"\").replace(\"\u20AC\", \"\")\n        ss = ss.replace(\"\
+  ,\", \"\").replace(\" \", \"\")\n\n        is_percent = False\n        if ss.endswith(\"\
+  %\"):\n            is_percent = True\n            ss = ss[:-1]\n\n        # Allow\
+  \ leading +/-\n        try:\n            val = float(ss)\n        except Exception:\n\
+  \            return None\n\n        if neg:\n            val = -val\n        if\
+  \ is_percent:\n            val = val / 100.0\n        return val\n\n    # Coerce\
+  \ inputs to lists of strings; handle None/NaN\n    preds = [\"\" if is_nan(p) else\
+  \ str(p) for p in np.asarray(predictions, dtype=object)]\n    gts   = [\"\" if is_nan(t)\
+  \ else str(t) for t in np.asarray(labels, dtype=object)]\n\n    if len(preds) !=\
+  \ len(gts):\n        raise ValueError(\n            f\"Number of predictions ({{len(preds)}})\
+  \ does not match number of labels ({{len(gts)}}).\"\n        )\n\n    correct =\
+  \ 0\n    n = len(gts)\n\n    # Tolerances for numeric comparison\n    ABS_TOL =\
+  \ 1e-4\n    REL_TOL = 1e-4\n\n    for p, t in zip(preds, gts):\n        # Try numeric\
+  \ compare first\n        pn = to_number(p)\n        tn = to_number(t)\n\n      \
+  \  if pn is not None and tn is not None:\n            if abs(pn - tn) <= max(ABS_TOL,\
+  \ REL_TOL * max(1.0, abs(tn))):\n                correct += 1\n            continue\n\
+  \n        # Fall back to normalized string exact match\n        if normalize_text(p)\
+  \ == normalize_text(t):\n            correct += 1\n\n    acc = correct / n if n\
+  \ > 0 else 0.0\n    return {{\"Accuracy\": float(acc)}}\n\n\n\ndef _cli():\n   \
+  \ p = argparse.ArgumentParser(\n        description=\"Evaluate predictions\"\n \
+  \   )\n    p.add_argument(\"--submission-file\", default=\"submission.csv\",\n \
+  \                  help=\"Path to CSV file containing predictions.\")\n    a = p.parse_args()\n\
+  \n    print(\"Loading test set labels...\")\n    labels = load_test_set()\n    n_test_samples\
+  \ = len(labels)\n    print(f\"Loaded {{n_test_samples}} labels.\")\n\n    print(f\"\
+  Loading predictions from: {{a.submission_file}}\")\n    try:\n        # Assuming\
+  \ CSV has no header and contains only prediction values\n        # Adjust if your\
+  \ submission format is different (e.g., has headers, specific columns)\n       \
+  \ submission_df = pd.read_csv(a.submission_file, header=0)\n        preds = submission_df.values.squeeze()\n\
+  \        if preds.shape[0] != n_test_samples:\n            raise ValueError(\n \
+  \               f\"Submission file row count ({{preds.shape[0]}}) \"\n         \
+  \       f\"does not match test set size ({{n_test_samples}}).\"\n            )\n\
+  \        # Further shape validation could be added here against spec['shape_per_item']\n\
+  \        # e.g., if preds.shape[1:] != spec['shape_per_item']\n    except FileNotFoundError:\n\
+  \        p.error(f\"Submission file not found: {{a.submission_file}}\")\n    except\
+  \ Exception as e:\n        p.error(f\"Error loading submission_file: {{e}}\")\n\n\
+  \    print(\"Evaluating predictions...\")\n    result = evaluate(preds, labels)\n\
+  \n    print(\"\\n--- EVALUATION RESULT ---\")\n    print(json.dumps(result, indent=2))\n\
+  \nif __name__ == '__main__':\n    _cli()\n\n```\nIf a baseline is given, your task\
+  \ is to train a new model that improves performance on the given dataset as much\
+  \ as possible. If you fail to produce a valid submission artefact evaluation file\
+  \ will give you a score of 0.\n{dataset_docs}"
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: QuestionAnsweringFinqaAccuracy
+memory_path: data/QuestionAnsweringFinqaAccuracy/memory.json
+metric_lower_is_better: false
+name: QuestionAnsweringFinqaAccuracy
+requirements_path: data/QuestionAnsweringFinqaAccuracy/requirements.txt
+starter_code:
+- data/QuestionAnsweringFinqaAccuracy/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false

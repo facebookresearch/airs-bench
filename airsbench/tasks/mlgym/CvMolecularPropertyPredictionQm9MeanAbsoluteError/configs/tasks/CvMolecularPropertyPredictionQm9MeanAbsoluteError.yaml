@@ -1,0 +1,102 @@
+dataset_configs:
+- datasets/qm9.yaml
+description: "\n    # Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to complete the project's TASK following the instructions provided\
+  \ below.\n\nTASK: Your task is to predict a molecular property of small molecules\
+  \ which is known as the **heat capacity at constant volume (c_v)**. This is a fundamental\
+  \ thermodynamic property that measures the amount of energy required to raise the\
+  \ temperature of one mole of a substance by one degree Kelvin at constant volume.\
+  \ In the qm9 dataset, c_v values are computed at 298.15 K and given in units of\
+  \ cal/(mol\xB7K). This property is crucial for understanding molecular thermodynamics,\
+  \ phase transitions, and energy storage capabilities of chemical compounds. Your\
+  \ predictions will be scored against the `c_v` column of the test set.\n\n## Data\n\
+  ### Dataset Structure\nThe default config of qm9 has the following structure. Here\
+  \ is a description of the contents of each column including their name, what they\
+  \ contain, and the data type:\n ```\n {{\n  \"atomic_numbers\": List[int64],  #\
+  \ List of atomic numbers for each atom in the molecule (e.g., 1 for H, 6 for C,\
+  \ 8 for O)\n  \"pos\": List[List[float32]],  # 3D Cartesian coordinates (x, y, z)\
+  \ for each atom, shape: [num_atoms, 3]\n  \"A\": float32,  # Rotational constant\
+  \ A (GHz)\n  \"B\": float32,  # Rotational constant B (GHz)\n  \"C\": float32, \
+  \ # Rotational constant C (GHz)\n  \"natoms\": int64,  # Number of atoms in the\
+  \ molecule\n  \"tags\": List[int64],  # Per-atom categorical labels\n  \"composition\"\
+  : List[int64],  # Vector encoding the count of each element in the molecule\n\n\
+  }}```\n\n An example entry of the train dataset contains the following:\n ```\n\
+  \ {{\n    'atomic_numbers': [6, 1, 1, 1, 1],  # Atomic numbers (e.g., C=6, H=1)\n\
+  \    'pos': [\n        [-0.01269999984651804,1.085800051689148,0.00800000037997961],\n\
+  \        [0.002199999988079071,-0.006000000052154064,0.0020000000949949026],[1.0117000341415405,1.4637999534606934,0.0003000000142492354],\n\
+  \        [-0.5407999753952026,1.4474999904632568,-0.8766000270843506],\n       \
+  \ [-0.5238000154495239,1.4378999471664429,0.9064000248908997]\n    ],  # 3D coordinates\
+  \ for each atom\n    'A': 157.711807,\n    'B': 157.709976,\n    'C': 157.706985,\n\
+  \    'natoms': 5,     # Number of atoms (int64)\n    'tags': [2,2,2,2,2],\n    'id':\
+  \ '1_167',\n    'composition': [0,4,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]\n\
+  \    'c_v': 40.306999\n}}\n```\n\n> Note: The scoring column (`c_v`) has been removed\
+  \ from the test data. Ensure you preserve the original row order of the test set\
+  \ when producing predictions.\n\nTrain data can be loaded using:\n```python\nfrom\
+  \ datasets import load_from_disk\ntrain_dataset = load_from_disk('./data/train')\n\
+  ```\nValidation data can be loaded using:\n```python\nfrom datasets import load_from_disk\n\
+  train_dataset = load_from_disk('./data/val')\n```\nTest data can be loaded using:\n\
+  ```python\nfrom datasets import load_from_disk\ntest_dataset = load_from_disk('./data/test')\n\
+  ```\n\n### Submission file\nThe submission file should contain the predicted values\
+  \ for the test set. The submission file should be a csv file named `submission.csv`\
+  \ with the following header:\n```\nc_v\n```\n\nAnd it should be of shape `(10000,1)`\
+  \ \u2014 one prediction per row, aligned with the test set order.\n\n### Evalution\n\
+  The evaluation will be performed on the `submission.csv` file you have submitted\
+  \ using the MeanAbsoluteError metric. Here is the evaluation script that will be\
+  \ used:\n```\n#!/usr/bin/env python3\nimport argparse, json, numpy as np, pandas\
+  \ as pd\n# Conditional torch import - might be added by generated functions if needed\n\
+  # import torch\nfrom datasets import load_dataset, load_from_disk\n\n\nfrom datasets\
+  \ import load_dataset\nimport numpy as np\n\ndef load_test_set():\n    dataset =\
+  \ load_from_disk('./data/test_with_labels')\n    return np.array(dataset[\"c_v\"\
+  ])\n\n\nimport torch\nimport numpy as np\nfrom torchmetrics import MeanAbsoluteError\n\
+  \ndef evaluate(predictions, labels):\n    # Convert numpy arrays to tensors if needed\n\
+  \    if isinstance(predictions, np.ndarray):\n        predictions = torch.from_numpy(predictions)\n\
+  \    if isinstance(labels, np.ndarray):\n        labels = torch.from_numpy(labels)\n\
+  \n    # Ensure inputs are torch tensors with float type\n    if not isinstance(predictions,\
+  \ torch.Tensor):\n        predictions = torch.tensor(predictions, dtype=torch.float32)\n\
+  \    if not isinstance(labels, torch.Tensor):\n        labels = torch.tensor(labels,\
+  \ dtype=torch.float32)\n\n    predictions = predictions.float()\n    labels = labels.float()\n\
+  \n    # Initialize and compute metric\n    metric = MeanAbsoluteError(num_outputs=1)\n\
+  \    score = metric(predictions, labels)\n\n    return {{\"MeanAbsoluteError\":\
+  \ score.item()}}\n\n\nimport numpy as np\nimport random\nimport string\n\ndef generate_dummy_predictions(n_samples):\n\
+  \    # Given nature is \"unknown\", we'll return scalar values as a reasonable default\n\
+  \    predictions = np.random.uniform(0, 1, size=(n_samples, 1))\n    return predictions.squeeze()\n\
+  \n\n\ndef _cli():\n    p = argparse.ArgumentParser(\n        description=\"Evaluate\
+  \ predictions for qm9 test split using MeanAbsoluteError.\"\n    )\n    p.add_argument(\"\
+  --dummy-submission\", action=\"store_true\",\n                   help=\"Evaluate\
+  \ with randomly generated dummy predictions.\")\n    p.add_argument(\"--submission-file\"\
+  , default=\"submission.csv\",\n                   help=\"Path to CSV file containing\
+  \ predictions.\")\n    a = p.parse_args()\n\n    print(\"Loading test set labels...\"\
+  )\n    labels = load_test_set()\n    n_test_samples = len(labels)\n    print(f\"\
+  Loaded {{n_test_samples}} labels.\")\n\n    if a.dummy_submission:\n        print(f\"\
+  Generating {{n_test_samples}} dummy predictions...\")\n        preds = generate_dummy_predictions(n_test_samples)\n\
+  \    else:\n        print(f\"Loading predictions from: {{a.submission_file}}\")\n\
+  \        try:\n            # Assuming CSV has no header and contains only prediction\
+  \ values\n            # Adjust if your submission format is different (e.g., has\
+  \ headers, specific columns)\n            submission_df = pd.read_csv(a.submission_file,\
+  \ header=0)\n            preds = submission_df.values.squeeze()\n            if\
+  \ preds.shape[0] != n_test_samples:\n                raise ValueError(\n       \
+  \             f\"Submission file row count ({{preds.shape[0]}}) \"\n           \
+  \         f\"does not match test set size ({{n_test_samples}}).\"\n            \
+  \    )\n            # Further shape validation could be added here against spec['shape_per_item']\n\
+  \            # e.g., if preds.shape[1:] != spec['shape_per_item']\n        except\
+  \ FileNotFoundError:\n            p.error(f\"Submission file not found: {{a.submission_file}}\"\
+  )\n        except Exception as e:\n            p.error(f\"Error loading submission_file:\
+  \ {{e}}\")\n\n    print(\"Evaluating predictions...\")\n    result = evaluate(preds,\
+  \ labels)\n\n    print(\"\\n--- EVALUATION RESULT ---\")\n    print(json.dumps(result,\
+  \ indent=2))\n\nif __name__ == '__main__':\n    _cli()\n```\nIf a baseline is given,\
+  \ your task is to train a new model that improves performance on the given dataset\
+  \ as much as possible. If you fail to produce a valid submission artefact evaluation\
+  \ file will give you a score of 0.\n{dataset_docs}"
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: CvMolecularPropertyPredictionQm9MeanAbsoluteError
+memory_path: data/CvMolecularPropertyPredictionQm9MeanAbsoluteError/memory.json
+metric_lower_is_better: true
+name: CvMolecularPropertyPredictionQm9MeanAbsoluteError
+requirements_path: data/CvMolecularPropertyPredictionQm9MeanAbsoluteError/requirements.txt
+starter_code:
+- data/CvMolecularPropertyPredictionQm9MeanAbsoluteError/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false

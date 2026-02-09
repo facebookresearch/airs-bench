@@ -1,0 +1,41 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+  - pandas
+  - numpy
+  - torch
+logging_info:
+  name: QuestionAnsweringFinqaAccuracy
+  dataset: dreamerdeo/finqa
+  category: Question Answering
+  research_problem: Question Answering
+  output_type: Text Generation
+  config: default
+  train_split: train
+  test_split: test
+  input_columns:
+    - pre_text
+    - post_text
+    - table
+    - question
+  scoring_column: answer
+  shape: 
+   - 1147
+  custom_gold_labels: false
+  custom_rad_class: false
+  metric: Accuracy
+  additional_metrics: null
+  sota:
+    - sota_paper_title: 'Are ChatGPT and GPT-4 General-Purpose Solvers for Financial Text Analytics? A Study on Several Typical Tasks'
+      sota_paper_url: https://arxiv.org/pdf/2305.05862v2
+      sota_score: 0.7803
+      sota_year: 2023
+      sota_venue: EMNLP
+  dataset_paper_url: https://arxiv.org/abs/2109.00120
+  estimated_worst_score: 0.0
+  optimal_score: 1.0

@@ -1,0 +1,17 @@
+dataset,config
+ChilleD/SVAMP,default
+Monash-University/monash_tsf,kaggle_web_traffic
+Monash-University/monash_tsf,rideshare
+Monash-University/monash_tsf,solar_weekly
+Pavithree/eli5,default
+RobZamp/sick,default
+Yelp/yelp_review_full,yelp_review_full
+allenai/winogrande,winogrande_xl
+aps/super_glue,wsc
+codeparrot/apps,all
+dreamerdeo/finqa,default
+google/code_x_glue_tc_nl_code_search_adv,default
+graphs-datasets/ZINC,default
+ibm-research/duorc,ParaphraseRC
+nimashoghi/qm9,default
+rajpurkar/squad,plain_text

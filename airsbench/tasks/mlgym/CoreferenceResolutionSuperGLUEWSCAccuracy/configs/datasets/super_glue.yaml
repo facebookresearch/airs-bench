@@ -1,0 +1,24 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/CoreferenceResolutionSuperGLUEWSCAccuracy
+description:
+  label:
+    _type: ClassLabel
+    names:
+    - 'False'
+    - 'True'
+  span1_index:
+    _type: Value
+    dtype: int32
+  span1_text:
+    _type: Value
+    dtype: string
+  span2_index:
+    _type: Value
+    dtype: int32
+  span2_text:
+    _type: Value
+    dtype: string
+  text:
+    _type: Value
+    dtype: string
+is_local: true
+name: super_glue

@@ -1,0 +1,42 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+  - pandas
+  - numpy
+  - torch
+  - pyext
+prepare_code_python_requirements:
+  - pyext
+logging_info:
+  name: CodeGenerationAPPSPassAt5
+  category: Code
+  research_problem: Code Generation
+  output_type: Text Generation
+  dataset: codeparrot/apps
+  config: all
+  metric: Pass@5
+  input_columns:
+    - question
+    - starter_code
+  scoring_column: input_output
+  train_split: train
+  test_split: test
+  shape: 
+    - 5000 
+    - 5
+  custom_gold_labels: true
+  custom_rad_class: false
+  sota:
+    - sota_paper_title: 'Code Llama: Open Foundation Models for Code'
+      sota_paper_url: https://arxiv.org/pdf/2308.12950
+      sota_score: 0.187
+      sota_year: 2023
+      sota_venue: Model technical report
+  dataset_paper_url: https://arxiv.org/abs/2105.09938
+  estimated_worst_score: 0.0
+  optimal_score: 1.0

@@ -1,0 +1,41 @@
+metric_lower_is_better: true
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+  - pandas
+  - numpy
+  - torch
+  - sktime
+prepare_code_python_requirements: -sktime
+logging_info:
+  name: TimeSeriesForecastingKaggleWebTrafficMASE
+  dataset: Monash-University/monash_tsf
+  category: Time Series
+  research_problem: Time Series Forecasting
+  output_type: time series
+  config: kaggle_web_traffic
+  train_split: train
+  test_split: test
+  input_columns:
+    - target
+  scoring_column: 
+    - label_target
+  shape: (145063,)
+  custom_gold_labels: true
+  custom_rad_class: false
+  metric: MASE
+  additional_metrics: null
+  sota:
+    - sota_paper_title: 'Monash Time Series Forecasting Archive'
+      sota_paper_url: https://datasets-benchmarks-proceedings.neurips.cc/paper/2021/file/eddea82ad2755b24c4e168c5fc2ebd40-Paper-round2.pdf
+      sota_score: 0.622
+      sota_year: 2021
+      sota_venue: NEURIPS
+  dataset_paper_url: https://arxiv.org/abs/2105.06643
+  estimated_worst_score: 502962963078372
+  optimal_score: 0.0
+  

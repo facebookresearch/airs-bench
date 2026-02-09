@@ -1,0 +1,16 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/TextualClassificationSickAccuracy
+description:
+  label:
+    _type: ClassLabel
+    names:
+    - entailment
+    - neutral
+    - contradiction
+  sentence_A:
+    _type: Value
+    dtype: string
+  sentence_B:
+    _type: Value
+    dtype: string
+is_local: true
+name: sick

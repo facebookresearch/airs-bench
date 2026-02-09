@@ -1,0 +1,15 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/SentimentAnalysisYelpReviewFullAccuracy
+description:
+  label:
+    _type: ClassLabel
+    names:
+    - 1 star
+    - 2 star
+    - 3 stars
+    - 4 stars
+    - 5 stars
+  text:
+    _type: Value
+    dtype: string
+is_local: true
+name: yelp_review_full

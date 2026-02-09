@@ -1,0 +1,14 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/TimeSeriesForecastingSolarWeeklyMAE
+description:
+  label_target:
+    _type: List
+    feature:
+      _type: Value
+      dtype: float32
+  target:
+    _type: List
+    feature:
+      _type: Value
+      dtype: float32
+is_local: true
+name: monash_tsf

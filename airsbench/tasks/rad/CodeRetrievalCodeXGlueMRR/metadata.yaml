@@ -1,0 +1,35 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+logging_info:
+  name: CodeRetrievalCodeXGlueMRR
+  dataset: google/code_x_glue_tc_nl_code_search_adv
+  category: Code
+  research_problem: Code Retrieval
+  output_type: Search results
+  config: default
+  train_split: train
+  test_split: test
+  input_columns:
+    - docstring_tokens
+    - id
+  scoring_column: id
+  shape: (19210,2)
+  custom_gold_labels: true
+  custom_rad_class: false
+  metric: MRR
+  additional_metrics: null
+  sota:
+    - sota_paper_title: 'UniXcoder: Unified Cross-Modal Pre-training for Code Representation'
+      sota_paper_url: https://arxiv.org/pdf/2203.03850
+      sota_score: 0.6113
+      sota_notes: from official leaderboard https://microsoft.github.io/CodeXGLUE/
+      sota_year: 2022
+      sota_venue: ACL
+  dataset_paper_url: https://arxiv.org/abs/2102.04664
+  estimated_worst_score: 0.0
+  optimal_score: 1.0

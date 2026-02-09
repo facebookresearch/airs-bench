@@ -1,0 +1,38 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+  - pandas
+  - numpy
+  - scikit-learn
+logging_info:
+  name: TextualClassificationSickAccuracy
+  dataset: RobZamp/sick
+  category: Text Classification
+  research_problem: Textual Inference
+  output_type: TextualClassification
+  config: default
+  train_split: train
+  test_split: test
+  input_columns:
+    - sentence_A
+    - sentence_B
+  scoring_column: label
+  shape: (4906,)
+  custom_gold_labels: false
+  custom_rad_class: false
+  metric: Accuracy
+  additional_metrics: null
+  sota:
+    - sota_paper_title: 'Curing the SICK and Other NLI Maladies'
+      sota_paper_url: https://direct.mit.edu/coli/article/49/1/199/113488/Curing-the-SICK-and-Other-NLI-Maladies
+      sota_score: 0.905
+      sota_year: 2023
+      sota_venue: Computational Linguistics
+  dataset_paper_url: https://arxiv.org/abs/1404.3648
+  estimated_worst_score: 0.1449245821
+  optimal_score: 1.0

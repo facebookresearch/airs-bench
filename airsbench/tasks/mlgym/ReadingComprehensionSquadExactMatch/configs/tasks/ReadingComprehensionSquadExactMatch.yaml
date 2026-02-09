@@ -1,0 +1,53 @@
+dataset_configs:
+- datasets/squad.yaml
+description: "\n# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to complete the project's TASK following the instructions provided\
+  \ below.\n\n    TASK: This is a NLP task to perform Reading Comprehension on rajpurkar/squad.\n\
+  \    You will be provided with a `title`, `context` paragraph and a `question` about\
+  \ the context, and will need to extract the answer from the context and return it\
+  \ as a string. Your predictions will be scored against the `answers` column of the\
+  \ test set. More specifically, your prediction will be considered correct if it\
+  \ exactly matches one of the possible answers in the `answers` in the `text` field.\n\
+  \n\n## Data\n### Dataset Structure\nThe default config of rajpurkar/squad has the\
+  \ following structure.\nHere is a description of the contents of each column including\
+  \ their name, what they contain, and the data type:\n ``` {{\n        'title': Value('string'),\
+  \ # title of the article\n        'context': Value('string'), # context paragraph\
+  \ containing the answer\n        'question': Value('string'), # question about the\
+  \ context\n        'answers': {{ # possible answers to the question\n          \
+  \  'text': List(Value('string')), # list of possible answers (This is the scoring\
+  \ column to predict)\n            'answer_start': List(Value('int32')) # list of\
+  \ character positions where each answer starts in the context\n        }}\n    }}\n\
+  ```\nTrain data can be loaded using:\n```python\n    from datasets import load_from_disk\n\
+  \    load_from_disk('./data/train') \n```\nTest data can be loaded using:\n```python\n\
+  \    from datasets import load_from_disk\n    load_from_disk('./data/test').\n```\n\
+  Note that the scoring column has been removed from the test data.\n### Submission\
+  \ file\nThe submission file should be a csv file named `submission.csv` with the\
+  \ following header:\n``` answers ```\nAnswers should have a single answer for each\
+  \ question in the test set (i.e. one string). Do not follow the the `answers` column\
+  \ structure in the original dataset, just provide a single string answer for each\
+  \ question.\n\nAnd it should be of shape (10570,).\n\n### Evalution\nThe evaluation\
+  \ will be performed on the `submission.csv` file you have submitted using the ExactMatch\
+  \ metric. Here is the evaluation script that will be used:\n```python\ndef evaluate(predictions,\
+  \ labels):\n    \"\"\"\n    Returns a dict of metric_name -> value\n    \"\"\"\n\
+  \    # Calculate exact match\n    exact_matches = 0\n    for pred, label_list in\
+  \ zip(predictions, labels):\n        if format_prediction(pred) in label_list:\n\
+  \            exact_matches += 1\n            continue\n    \n    exact_match_score\
+  \ = exact_matches / len(labels)\n\n    return {{\"ExactMatch\": exact_match_score}}\n\
+  ```\n\nYour csv submission will be loaded like this:\n```python\nimport pandas as\
+  \ pd\nsubmission_df = pd.read_csv(a.submission_file, header=0)\npreds = submission_df.values.squeeze()\n\
+  ```If a baseline is given, your task is to train a new model that improves performance\
+  \ on the given dataset as much as possible. If you fail to produce a valid submission\
+  \ artefact evaluation file will give you a score of 0.\n{dataset_docs}"
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: ReadingComprehensionSquadExactMatch
+memory_path: data/ReadingComprehensionSquadExactMatch/memory.json
+metric_lower_is_better: false
+name: ReadingComprehensionSquadExactMatch
+requirements_path: data/ReadingComprehensionSquadExactMatch/requirements.txt
+starter_code:
+- data/ReadingComprehensionSquadExactMatch/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false

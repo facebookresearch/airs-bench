@@ -1,0 +1,34 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - rouge_score
+logging_info:
+  name: QuestionAnsweringEli5Rouge1
+  category: Question Answering
+  research_problem: Question Answering
+  dataset: Pavithree/eli5
+  metric: Rouge1
+  shape: (10000,)
+  scoring_column: answers
+  config: default
+  output_type: Text generation
+  train_split: train
+  test_split: test
+  input_columns:
+    - title
+    - answers
+  custom_gold_labels: true
+  custom_rad_class: false
+  sota:
+    - sota_paper_title: 'Fourier Transformer: Fast Long Range Modeling by Removing Sequence Redundancy with FFT Operator'
+      sota_paper_url: https://arxiv.org/abs/2305.15099v2
+      sota_score: 0.269
+      sota_year: 2023
+      sota_venue: ACL
+  dataset_paper_url: https://arxiv.org/abs/1907.09190
+  estimated_worst_score: 0.002452415741
+  optimal_score: 1.0

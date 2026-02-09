@@ -1,0 +1,85 @@
+cleanup_eval_on_failure: false
+dataset_configs:
+- datasets/SVAMP.yaml
+description: "# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to build a model that solves the project's TASK following the\
+  \ instructions provided below.\n\nTASK: Your task is solve math world prolems. Each\
+  \ example presents a short story followed by a specific question. Your task is to\
+  \ read the text and predict the correct numerical answer. Your predictions will\
+  \ be scored against the `Answer` column of the test set.\n\n## Data\n### Dataset\
+  \ Structure\nThe default config of SVAMP has the following structure.\nHere is a\
+  \ description of the contents of each column including their name, what they contain,\
+  \ and the data type:\n```\n{{\n  \"ID\": string,               # Unique identifier\
+  \ for the problem\n  \"Body\": string,             # The narrative or context text\
+  \ describing the scenario\n  \"Question\": string,         # The actual math question\
+  \ asked based on the Body\n  \"Equation\": string,         # The ground-truth equation\
+  \ used to compute the answer\n  \"Answer\": string,           # The correct numerical\
+  \ solution to the problem (as text)\n  \"Type\": string,             # The problem\
+  \ category/type. Is one of [\"Subtraction\", \"Addition\", \"Common-Division\",\
+  \ \"Multiplication\"].\n  \"question_concat\": string   # Concatenation of Body\
+  \ and Question into one text field\n}}\n```\n\nAn example entry in the train dataset\
+  \ contains the following:\n- `ID`: \"chal-777`\n- `Body`: \"There are 87 oranges\
+  \ and 290 bananas in Philip's collection. If the bananas are organized into 2 groups\
+  \ and oranges are organized into 93 groups\"\n- `Question`: \"How big is each group\
+  \ of bananas?\"\n- `Equation`: \"( 290.0 / 2.0 )\"\n- `Answer`: \"145\"\n- `Type`:\
+  \ \"Common-Division\"\n- `question_concat`: \"There are 87 oranges and 290 bananas\
+  \ in Philip's collection. If the bananas are organized into 2 groups and oranges\
+  \ are organized into 93 groups How big is each group of bananas?\"\n\n> Note: The\
+  \ scoring columns (`Equation`, `Answer`, `Type`) have been removed from the test\
+  \ data. Ensure you preserve the original row order of the test set when producing\
+  \ predictions.\n\nTrain data can be loaded using:\n```python\nfrom datasets import\
+  \ load_from_disk\ntrain_dataset = load_from_disk('./data/train')\n```\n\nTest data\
+  \ can be loaded using:\n```python\nfrom datasets import load_from_disk\ntest_dataset\
+  \ = load_from_disk('./data/test')\n```\n\n### Submission file\nThe submission file\
+  \ should contain the selected answers for the test set. The submission file should\
+  \ be a csv file named `submission.csv` with the following header:\n```\nAnswer\n\
+  ```\n\nAnd it should be of shape `(300,1)` \u2014 one prediction per row, aligned\
+  \ with the test set order.\n\nEach row must contain the numerical answer to the\
+  \ question. Do not include any extra columns or indices.\n\n### Evalution\nThe evaluation\
+  \ will be performed on the `submission.csv` file you have submitted using the accuracy\
+  \ metric.\n\nEvaluation will be done using the following script:\n\n```py\n#!/usr/bin/env\
+  \ python3\nimport argparse, json\nimport numpy as np\nimport pandas as pd\nfrom\
+  \ datasets import load_from_disk\n\n\ndef load_test_answers(path='./data/test_with_labels'):\n\
+  \    \"\"\"\n    Load answers for evaluation (string labels).\n    \"\"\"\n    ds\
+  \ = load_from_disk(path)\n    if \"Answer\" not in ds.features:\n        raise RuntimeError(\n\
+  \            \"Test data does not contain 'Answer'. \"\n            \"Use a labeled\
+  \ copy like './data/test_with_labels'.\"\n        )\n    answers = list(ds[\"Answer\"\
+  ])\n    return answers\n\n\ndef evaluate(predictions, labels):\n    \"\"\"\n   \
+  \ Returns a dict of metric_name -> value\n    \"\"\"\n    correct = np.fromiter(\n\
+  \        (int(p) == int(y) for p, y in zip(predictions, labels)), dtype=bool\n \
+  \   )\n    return {{\"Accuracy\": float(correct.mean())}}\n\n\ndef _cli():\n   \
+  \ p = argparse.ArgumentParser(\n        description=\"Evaluate predictions for SVAMP\
+  \ test split using Accuracy.\"\n    )\n    p.add_argument(\"--submission-file\"\
+  , default=\"submission.csv\",\n                   help=\"Path to CSV file containing\
+  \ predictions.\")\n    a = p.parse_args()\n\n    print(\"Loading test set labels...\"\
+  )\n    labels = load_test_answers()\n    n_test_samples = len(labels)\n    print(f\"\
+  Loaded {{n_test_samples}} labels.\")\n\n    print(f\"Loading predictions from: {{a.submission_file}}\"\
+  )\n    try:\n        # Assuming CSV has no header and contains only prediction values\n\
+  \        # Adjust if your submission format is different (e.g., has headers, specific\
+  \ columns)\n        submission_df = pd.read_csv(a.submission_file, header=0)\n \
+  \       preds = submission_df.values.squeeze()\n        if preds.shape[0] != n_test_samples:\n\
+  \            raise ValueError(\n                f\"Submission file row count ({{preds.shape[0]}})\
+  \ \"\n                f\"does not match test set size ({{n_test_samples}}).\"\n\
+  \            )\n    except FileNotFoundError:\n        p.error(f\"Submission file\
+  \ not found: {{a.submission_file}}\")\n    except Exception as e:\n        p.error(f\"\
+  Error loading submission_file: {{e}}\")\n\n    print(\"Evaluating predictions...\"\
+  )\n    result = evaluate(preds, labels)\n\n    print(\"\\n--- EVALUATION RESULT\
+  \ ---\")\n    print(json.dumps(result, indent=2))\n\n\nif __name__ == '__main__':\n\
+  \    _cli()\n```If a baseline is given, your task is to train a new model that improves\
+  \ performance on the given dataset as much as possible. If you fail to produce a\
+  \ valid submission artefact evaluation file will give you a score of 0.\n{dataset_docs}"
+eval_timeout: 3600
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: MathQuestionAnsweringSVAMPAccuracy
+memory_path: data/MathQuestionAnsweringSVAMPAccuracy/memory.json
+metric_lower_is_better: false
+name: MathQuestionAnsweringSVAMPAccuracy
+requirements_path: data/MathQuestionAnsweringSVAMPAccuracy/requirements.txt
+starter_code:
+- data/MathQuestionAnsweringSVAMPAccuracy/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false
+use_separate_eval_container: true

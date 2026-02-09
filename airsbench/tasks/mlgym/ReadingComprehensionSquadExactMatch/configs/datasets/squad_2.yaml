@@ -1,0 +1,24 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/ReadingComprehensionSquadExactMatch
+description:
+  answers:
+    answer_start:
+      _type: List
+      feature:
+        _type: Value
+        dtype: int32
+    text:
+      _type: List
+      feature:
+        _type: Value
+        dtype: string
+  context:
+    _type: Value
+    dtype: string
+  question:
+    _type: Value
+    dtype: string
+  title:
+    _type: Value
+    dtype: string
+is_local: true
+name: squad

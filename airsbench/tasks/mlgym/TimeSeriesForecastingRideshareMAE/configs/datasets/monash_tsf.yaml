@@ -1,0 +1,18 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/TimeSeriesForecastingRideshareMAE
+description:
+  label_target:
+    _type: List
+    feature:
+      _type: List
+      feature:
+        _type: Value
+        dtype: float64
+  target:
+    _type: List
+    feature:
+      _type: List
+      feature:
+        _type: Value
+        dtype: float64
+is_local: true
+name: monash_tsf

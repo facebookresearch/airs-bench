@@ -1,0 +1,115 @@
+dataset_configs:
+- datasets/monash_tsf.yaml
+description: "# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to complete the project's TASK following the instructions provided\
+  \ below.\n\n    TASK: This is a Time Series task to perform time series forecasting\
+  \ on Monash-University/monash_tsf. You will be provided with time series data (`target`),\
+  \ and will need to forecast the future values. Your predictions will be scored against\
+  \ the `label_target` column of the test set.\n\n## Data\n### Dataset Description\n\
+  The rideshare dataset contains various hourly time series representations of attributes\
+  \ related to Uber and Lyft rideshare services for various locations in New York\
+  \ between 26/11/2018 and 18/12/2018. The dataset contains **2304 individual time\
+  \ series**, each capturing different aspects of rideshare demand and pricing, including\
+  \ pickup requests, pricing variations, and service availability across different\
+  \ geographic zones and time periods. The dataset is organized into 156 samples,\
+  \ each containing up to 15 time series, resulting in a total of 2304 individual\
+  \ time series to forecast.\n\nThe dataset includes **4 dynamic features** (covariates)\
+  \ that provide additional context for forecasting, such as temporal patterns, weather\
+  \ conditions, traffic indicators, or demand signals that vary over time alongside\
+  \ the main rideshare metrics.\n\nThe forecasting task is to predict **48 timesteps\
+  \ into the future** for each of the 2304 time series using historical hourly data.\
+  \ This corresponds to predicting the next 48 hours of rideshare service metrics\
+  \ for each individual time series based on historical patterns and covariate information.\n\
+  \n**Note on Missing Values**: This dataset contains NaN (Not a Number) values in\
+  \ the time series, representing missing or unavailable data points. During evaluation,\
+  \ only valid (non-NaN) data points are considered for calculating the Mean Absolute\
+  \ Error. Predictions for time steps with NaN ground truth values are ignored in\
+  \ the evaluation.\n\n### Dataset Structure\nThe rideshare config of `Monash-University/monash_tsf`\
+  \ has the following structure.\nHere is a description of the contents of each column\
+  \ including their name, what they contain, and the data type:\n```\n{{\n'label_target':\
+  \ List(Value('float32')), # true future values for the time series (This is the\
+  \ scoring column to predict). It includes both the historical and future values\
+  \ concatenated together.\n'target': List(Value('float32')), # historical values\
+  \ for the time series (a string representation of a list of floats)\n'feat_dynamic_real':\
+  \ List(Value('float32')), # additional dynamic real-valued features that can be\
+  \ used alongside the target time series\n}}\n```\nTrain data can be loaded using\
+  \ load_from_disk('./data/train') and test data can be loaded using load_from_disk('./data/test').\n\
+  Note that the scoring column has been removed from the test data.\n\n**Data Shape\
+  \ and Format**: The rideshare dataset treats each time series individually, resulting\
+  \ in **2304 individual time series** each requiring 48 future timestep predictions.\
+  \ The submission format is (2304, 48) where each row contains 48 forecast values\
+  \ for one time series.\n\n**NaN Handling in Evaluation**: During evaluation, NaN\
+  \ values in both predictions and ground truth labels are handled gracefully. Only\
+  \ valid (non-NaN) data points are considered when calculating the Mean Absolute\
+  \ Error. If a ground truth value is NaN, the corresponding prediction is ignored\
+  \ in the evaluation, ensuring robust performance measurement even with missing data.\n\
+  \n### Submission file\nThe submission file should be a csv file named `submission.csv`\
+  \ with the following header:\n``` label_target ```\n\nAnd it should be of shape\
+  \ `(2304,)` where each row contains a JSON-encoded list of 48 forecast values.\n\
+  \n### Evaluation Code\nThe evaluation metric is Mean Absolute Error (MAE), calculated\
+  \ as follows:\n\n```python\n#!/usr/bin/env python3\nimport argparse\nimport json\n\
+  import numpy as np\nimport pandas as pd\nimport ast\nfrom datasets import load_dataset,\
+  \ load_from_disk\nfrom sklearn.metrics import mean_absolute_error\nfrom utils import\
+  \ parse_and_validate_predictions_and_labels, process_predictions_and_labels_for_evaluation\n\
+  \n\ndef load_test_set():\n    \"\"\"Load test labels and extract forecast portions\
+  \ to match custom_labels.py output\"\"\"\n    import json\n    from utils import\
+  \ reformat_dataset\n\n    dataset = load_from_disk(\"./data/test_with_labels\")\n\
+  \n    # The dataset contains the full sequences, but we need just the forecast portions\n\
+  \    # like custom_labels.py generates - 48 values per individual time series\n\
+  \    validation_targets = dataset[\"target\"]  # Base sequences (validation length)\n\
+  \    full_test_targets = dataset[\"label_target\"]  # Full test sequences\n\n  \
+  \  forecast_labels = []\n    for val_target, full_target in zip(validation_targets,\
+  \ full_test_targets):\n        for i in range(len(full_target)):  # Process each\
+  \ series individually\n            val_series_len = len(val_target[i])\n       \
+  \     full_series = full_target[i]\n\n            # Extract available forecast portion\
+  \ - keep NaNs in original positions\n            available_forecast = full_series[val_series_len:]\n\
+  \n            # Take exactly 48 values, padding at the END with NaN if needed\n\
+  \            forecast_48 = available_forecast[:48]  # Take up to 48 values\n   \
+  \         while len(forecast_48) < 48:  # Pad at the END if shorter\n          \
+  \      forecast_48.append(np.nan)\n\n            # Convert to JSON string like custom_labels.py\
+  \ does\n            # Handle NaN values\n            forecast_clean = []\n     \
+  \       for val in forecast_48:\n                if isinstance(val, float) and np.isnan(val):\n\
+  \                    forecast_clean.append(\"NaN\")\n                else:\n   \
+  \                 forecast_clean.append(val)\n\n            # Each individual time\
+  \ series becomes one row with 48 forecasts\n            forecast_labels.append(json.dumps(forecast_clean))\n\
+  \n    return forecast_labels\n\n\ndef evaluate(predictions, labels):\n    \"\"\"\
+  \n    Returns a dict of metric_name -> value\n    \"\"\"\n\n    all_preds_flat,\
+  \ all_labels_flat = parse_and_validate_predictions_and_labels(predictions, labels)\n\
+  \    valid_preds, valid_labels = process_predictions_and_labels_for_evaluation(all_preds_flat,\
+  \ all_labels_flat)\n    mae = mean_absolute_error(valid_labels, valid_preds)\n \
+  \   return {{\"MAE\": mae}}\n\n\ndef _cli():\n    p = argparse.ArgumentParser(description=\"\
+  Evaluate predictions\")\n    p.add_argument(\"--submission-file\", default=\"submission.csv\"\
+  , help=\"Path to CSV file containing predictions.\")\n    a = p.parse_args()\n\n\
+  \    print(\"Loading test set labels...\")\n    labels = load_test_set()\n    n_test_samples\
+  \ = len(labels)\n    print(f\"Loaded {{n_test_samples}} labels.\")\n\n    print(f\"\
+  Loading predictions from: {{a.submission_file}}\")\n    try:\n        # Assuming\
+  \ CSV has no header and contains only prediction values\n        # Adjust if your\
+  \ submission format is different (e.g., has headers, specific columns)\n       \
+  \ submission_df = pd.read_csv(a.submission_file, header=0)\n        preds = submission_df.values.squeeze()\n\
+  \        if preds.shape[0] != n_test_samples:\n            raise ValueError(\n \
+  \               f\"Submission file row count ({{preds.shape[0]}}) does not match\
+  \ test set size ({{n_test_samples}}).\"\n            )\n        # Further shape\
+  \ validation could be added here against spec['shape_per_item']\n        # e.g.,\
+  \ if preds.shape[1:] != spec['shape_per_item']\n    except FileNotFoundError:\n\
+  \        p.error(f\"Submission file not found: {{a.submission_file}}\")\n    except\
+  \ Exception as e:\n        p.error(f\"Error loading submission_file: {{e}}\")\n\n\
+  \    print(\"Evaluating predictions...\")\n    result = evaluate(preds, labels)\n\
+  \n    print(\"\\n--- EVALUATION RESULT ---\")\n    print(json.dumps(result, indent=2))\n\
+  \n\nif __name__ == \"__main__\":\n    _cli()\n\n```\nIf a baseline is given, your\
+  \ task is to train a new model that improves performance on the given dataset as\
+  \ much as possible. If you fail to produce a valid submission artefact evaluation\
+  \ file will give you a score of 0.\n{dataset_docs}"
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: TimeSeriesForecastingRideshareMAE
+memory_path: data/TimeSeriesForecastingRideshareMAE/memory.json
+metric_lower_is_better: true
+name: TimeSeriesForecastingRideshareMAE
+requirements_path: data/TimeSeriesForecastingRideshareMAE/requirements.txt
+starter_code:
+- data/TimeSeriesForecastingRideshareMAE/evaluate.py
+- data/TimeSeriesForecastingRideshareMAE/utils.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false

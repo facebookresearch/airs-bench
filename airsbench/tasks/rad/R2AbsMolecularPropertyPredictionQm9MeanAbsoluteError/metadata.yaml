@@ -1,0 +1,45 @@
+metric_lower_is_better: true
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+  - pandas
+  - numpy
+  - torch
+logging_info:
+  name: R2AbsMolecularPropertyPredictionQm9MeanAbsoluteError
+  dataset: nimashoghi/qm9
+  metric: MeanAbsoluteError
+  shape: (10000,1)
+  input_columns:
+    - pos
+    - atomic_numbers
+    - A
+    - B
+    - C
+    - natoms
+    - tags
+    - id
+    - composition
+  scoring_column: R_2_Abs
+  config: default
+  train_split: train
+  test_split: test
+  category: Molecules and Proteins ML
+  research_problem: Molecular Property Prediction
+  output_type: Object Classification
+  custom_gold_labels: false
+  custom_rad_class: false
+  additional_metrics: null
+  sota:
+    - sota_paper_title: 'EquiformerV2: Improved Equivariant Transformer for Scaling to Higher-Degree Representations'
+      sota_paper_url: https://arxiv.org/pdf/2306.12059v3
+      sota_score: 0.033
+      sota_year: 2024
+      sota_venue: ICLR
+  dataset_paper_url: https://arxiv.org/abs/1402.1274
+  estimated_worst_score: 1187.717407
+  optimal_score: 0.0

@@ -1,0 +1,33 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+logging_info:
+  name: SentimentAnalysisYelpReviewFullAccuracy
+  dataset: Yelp/yelp_review_full
+  metric: Accuracy
+  additional_metrics: null
+  shape: (50000,)
+  input_columns:
+    - text
+  scoring_column: label
+  config: yelp_review_full
+  train_split: train
+  test_split: test
+  category: Text Classification
+  research_problem: Text Classification
+  output_type: Text Classification
+  custom_gold_labels: false
+  custom_rad_class: false
+  sota:
+    - sota_paper_title: 'SplitEE: Early Exit in Deep Neural Networks with Split Computing'
+      sota_paper_url: https://arxiv.org/pdf/2309.09195v1
+      sota_score: 0.778
+      sota_year: 2023
+      sota_venue: AIMLSystems
+  dataset_paper_url: https://arxiv.org/abs/1509.01626
+  estimated_worst_score: 0.18208
+  optimal_score: 1.0

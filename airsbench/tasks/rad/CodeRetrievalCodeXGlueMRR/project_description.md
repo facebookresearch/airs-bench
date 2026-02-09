@@ -1,0 +1,147 @@
+
+# Overview
+## Task Description
+This is a Machine Learning project and your goal is to complete the project's TASK following the instructions provided below.
+
+    TASK: This is a NLP task to perform Code retrieval on google/code_x_glue_tc_nl_code_search_adv.
+
+## Data
+### Dataset Structure
+This is a retrieval task, so for each split (other than test) there is a set of search queries (`./data/<split>/queries_with_labels`) along with a large corpus to search over (`./data/<split>/search_corpus`).
+
+Each item in the corpus is structured as: `{'id': Value('int32'), 'code': Value('string')}`. For example: 
+```
+{'id': 0,
+ 'code': 'def Func(arg_0, arg_1=\'.\', arg_2=True, arg_3=False, **arg_4):\n   arg_5 = get_content(rebuilt_url(arg_0))\n    arg_6 = json.loads(match1(arg_5, r\'qualities":({.+?}),"\'))\n    arg_7 = match1(arg_5, r\'"video_title"\\s*:\\s*"([^"]+)"\') or \\\n            match1(arg_5, r\'"title"\\s*:\\s*"([^"]+)"\')\n    arg_7 = unicodize(arg_7)\n\n    for arg_8 in [\'1080\',\'720\',\'480\',\'380\',\'240\',\'144\',\'auto\']:\n        try:\n            arg_9 = arg_6[arg_8][1]["url"]\n            if arg_9:\n                break\n        except KeyError:\n            pass\n\n    arg_10, arg_11, arg_12 = url_info(arg_9)\n\n    print_info(site_info, arg_7, arg_10, arg_12)\n    if not arg_3:\n        download_urls([arg_9], arg_7, arg_11, arg_12, arg_1=arg_1, arg_2=arg_2)'}
+```
+
+For the train and validation splits, you are provided the correct index result for each query.
+The query set with labels is structed as `{'id': Value('int32'), 'query': Value('string')}` where id is the correct index from the corpus.
+For example, a row would be
+```
+{'id': 0, 'query': 'Downloads Sina videos by URL .'}
+```
+
+You can load train data with `load_from_disk('./data/train/search_corpus')` and `load_from_disk('./data/train/queries_with_labels')`
+You can load validation data with `load_from_disk('./data/validation/search_corpus')` and `load_from_disk('./data/validation/queries_with_labels')`
+where `load_from_disk` is imported `from datasets import load_from_disk`.
+
+You can load test data with `load_from_disk('./data/test/search_corpus')` and `load_from_disk('./data/test/queries')`. 
+Note that the correct `id` label for the test queries has been removed, i.e `{'query': 'Downloads Dailymotion videos by URL .'}`
+
+### Submission file
+You need to submit a CSV with header: query, rankings
+where rankings is json.dumps([list of ranked code ids])
+For example if your submissions are in the form of a huggingface dataset
+you could do:
+```
+def save_hugginface_dataset_as_csv(dds, output_fpath):
+    """
+    Takes a huggingface dataset with columns query: str, rankings: [list of ranked code ids]
+    Saves as a CSV with header: query,rankings
+    where rankings is json.dumps([list of ranked code ids])
+    """
+    dds = dds.map(
+        lambda example: {
+            "rankings": json.dumps(example["rankings"])
+        }
+    )
+    df = dds.to_pandas()
+    df.to_csv(output_fpath, index=False, header=["query", "rankings"])
+```
+
+The head of an example submission.csv would be
+```
+query,rankings
+str - > list Convert XML to URL List . From Biligrab .,"[4773, 10566, 18730, 11359, 16173, 17791, 3428, 4163, 2037, 6838, 2336, 792, 15939, 282, 18883, 10090, 16583, 9041, 5028, 6885, 3809, 7866, 1581, 14613, 1873, 12513, 13734, 4063, 12427, 5984, 4533, 1711, 7378, 1481, 18669, 9190, 17151, 3966, 18913, 15831, 17524, 16150, 12175, 19138, 4662, 17724, 7578, 13530, 14139, 11756, 12014, 6126, 3148, 5176, 13260, 1120, 5799, 718, 5691, 14633, 7990, 2459, 6309, 4778, 8468, 0, 7473, 18590, 3227, 305, 12687, 16419, 3621, 17969, 17759, 7338, 12346, 9032, 15906, 14930, 11270, 7319, 5423, 4218, 8952, 14254, 11863, 18073, 4973, 3067, 3340, 13478, 7898, 6132, 699, 2527, 12903, 8961, 7260, 12805, 17477, 3637, 15206, 1167, 9969, 16952, 7530, 14532, 8599, 17194, 341, 2399, 480, 15207, 16079, 10442, 1354, 18494, 18059, 17307, 8984, 4358, 6874, 11557, 16559, 12936, 12671, 16181, 552, 4913, 11228, 18668, 13003, 9595, 2748, 10221, 4108, 7886]"
+Downloads Sina videos by URL .,"[14233, 18494, 2339, 18240, 12558, 2155, 17809, 3995, 10983, 8795, 3908, 15402, 143, 1670, 6689, 15988, 797, 11177, 5111, 1217, 3256, 8938, 1858, 18281, 14473, 8128, 1, 11149, 11423, 1812, 10327, 14244, 3569, 9551, 6388, 1829, 18118, 15332, 1245, 11551, 9383, 14727, 4162, 8270, 7121, 15307, 11203, 17898, 11047, 13513, 9972, 18078, 106, 5244, 14085, 7204, 19157, 5438, 18355, 10039, 1610, 6012, 16207, 11308, 18246, 17214, 37, 14335, 4696, 5671, 5673, 10577, 7152, 10395, 16792, 12104]"
+Format text with color or other effects into ANSI escaped string .,"[11572, 7666, 2401, 14887, 5944, 11933, 2718, 10631, 7455, 16890, 10310, 6189, 60, 10529, 8005, 1052, 13208, 910, 5802, 2, 13390, 18448, 5052, 7469, 19103, 17611, 1495, 10175, 11936, 17764, 10045, 1140, 14181, 5388, 9579, 5193, 1757, 8066, 10604, 13277, 12231, 11085, 13859, 6252, 16010, 12249, 6778, 3444, 18797, 15768, 11982, 3507, 18830, 5747, 15577, 6395, 9371, 16578, 9868, 14335, 12163, 9038, 7914, 5210, 18743, 2042, 8736, 17465, 5012, 13136, 3700, 17616, 10176, 12175, 3621, 7553, 15336, 9605, 15419]"
+...
+```
+
+The submission.csv should be of shape (19210,2). 
+The rankings list can be anywhere from length 1 (just providing top search index) or providing rankings for all indexes in search corpus.
+
+
+### Evalution
+The evaluation will be performed on the `submission.csv` file you have submitted using the MRR metric. Here is the evaluation script that will be used:
+
+```py
+#!/usr/bin/env python3
+import argparse, json
+import numpy as np
+import pandas as pd
+import torch
+from datasets import load_dataset, load_from_disk
+from utils import calculate_scores
+
+
+def load_test_set():
+    return load_from_disk('./data/test_with_labels')
+
+
+def evaluate(predictions, labels):
+    """
+    Returns a dict of metric_name -> value
+    """
+    # Predictions should be pd.DataFrame with columns: query: str, rankings: json.dumps([list of ranked code ids])
+    # Labels should be hf Dataset with keys query: str, id: code id
+
+    # First json.loads the rankings column of predictions
+    predictions['rankings'] = predictions['rankings'].apply(json.loads)
+
+    # Map to format for calculate_scores
+    # Predictions are {url: str -> [list of ranked code ids]}
+    # Labels are {url: str -> code id}
+    # We'll use the query as the url for both
+    formatted_predictions = {
+        q: pred.tolist() if isinstance(pred, np.ndarray) else pred
+        for q, pred in zip(predictions['query'], predictions['rankings'])
+    }
+    formatted_labels = {
+        q: label
+        for q, label in zip(labels['query'], labels['id'])
+    }
+    return calculate_scores(formatted_labels, formatted_predictions)
+
+
+def _cli():
+    p = argparse.ArgumentParser(
+        description="Evaluate predictions"
+    )
+    p.add_argument("--submission-file", default="submission.csv",
+                   help="Path to CSV file containing predictions.")
+    a = p.parse_args()
+
+    print("Loading test set labels...")
+    labels = load_test_set()
+    n_test_samples = len(labels)
+    print(f"Loaded {n_test_samples} labels.")
+
+    print(f"Loading predictions from: {a.submission_file}")
+    try:
+        # Assuming CSV has no header and contains only prediction values
+        # Adjust if your submission format is different (e.g., has headers, specific columns)
+        preds = pd.read_csv(a.submission_file, header=0)
+        if preds.shape[0] != n_test_samples:
+            raise ValueError(
+                f"Submission file row count ({preds.shape[0]}) "
+                f"does not match test set size ({n_test_samples})."
+            )
+        # Further shape validation could be added here against spec['shape_per_item']
+        # e.g., if preds.shape[1:] != spec['shape_per_item']
+    except FileNotFoundError:
+        p.error(f"Submission file not found: {a.submission_file}")
+    except Exception as e:
+        p.error(f"Error loading submission_file: {e}")
+
+    print("Evaluating predictions...")
+    result = evaluate(preds, labels)
+
+    print("\n--- EVALUATION RESULT ---")
+    print(json.dumps(result, indent=2))
+
+if __name__ == '__main__':
+    _cli()
+```
+    

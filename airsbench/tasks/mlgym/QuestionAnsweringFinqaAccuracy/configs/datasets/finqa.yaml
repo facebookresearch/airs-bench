@@ -1,0 +1,27 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/QuestionAnsweringFinqaAccuracy
+description:
+  answer:
+    _type: Value
+    dtype: string
+  post_text:
+    _type: List
+    feature:
+      _type: Value
+      dtype: string
+  pre_text:
+    _type: List
+    feature:
+      _type: Value
+      dtype: string
+  question:
+    _type: Value
+    dtype: string
+  table:
+    _type: List
+    feature:
+      _type: List
+      feature:
+        _type: Value
+        dtype: string
+is_local: true
+name: finqa

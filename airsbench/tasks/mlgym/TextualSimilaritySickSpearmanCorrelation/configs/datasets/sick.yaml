@@ -1,0 +1,13 @@
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/TextualSimilaritySickSpearmanCorrelation
+description:
+  relatedness_score:
+    _type: Value
+    dtype: float32
+  sentence_A:
+    _type: Value
+    dtype: string
+  sentence_B:
+    _type: Value
+    dtype: string
+is_local: true
+name: sick

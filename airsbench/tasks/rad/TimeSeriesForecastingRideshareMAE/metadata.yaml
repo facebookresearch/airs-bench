@@ -1,0 +1,41 @@
+metric_lower_is_better: true
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+  - pandas
+  - numpy
+  - torch
+  - scikit-learn
+logging_info:
+  name: TimeSeriesForecastingRideshareMAE
+  category: Time Series
+  research_problem: Time Series Forecasting
+  output_type: Numeric
+  dataset: Monash-University/monash_tsf
+  config: rideshare
+  metric: MAE
+  additional_metrics: MAPE, sMAPE, MAE, RMSE
+  train_split: train
+  test_split: test
+  input_columns:
+    - target
+    - feat_dynamic_real
+  scoring_column: 
+   - label_target
+  shape: (2304,)
+  custom_gold_labels: true
+  custom_rad_class: false
+  sota:
+    - sota_paper_title: 'Bridging Distribution Gaps in Time Series Foundation Model Pretraining with Prototype-Guided Normalization'
+      sota_paper_url: https://arxiv.org/pdf/2504.10900
+      sota_score: 1.185
+      sota_year: 2025
+      sota_venue: Preprint
+  dataset_paper_url: https://arxiv.org/abs/2105.06643
+  estimated_worst_score: 9.09136413
+  optimal_score: 0.0
+  

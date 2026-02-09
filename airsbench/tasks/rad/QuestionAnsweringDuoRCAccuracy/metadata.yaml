@@ -1,0 +1,39 @@
+metric_lower_is_better: false
+file_export_globs:
+  - submission.csv
+container_python_requirements:
+  - datasets==4.0.0
+evaluate_container_python_requirements:
+  - datasets==4.0.0
+  - torchmetrics
+  - pandas
+  - numpy
+  - torch
+logging_info:
+  name: QuestionAnsweringDuoRCAccuracy
+  category: Question Answering
+  research_problem: Question Answering
+  output_type: Text Classification
+  dataset: ibm-research/duorc
+  config: ParaphraseRC
+  metric: Accuracy
+  input_columns:
+    - title
+    - plot
+    - question
+  scoring_column: answers
+  train_split: train
+  test_split: test
+  shape: [15857, 2]
+  custom_gold_labels: true
+  custom_rad_class: false
+  sota:
+    - sota_paper_title: 'Grid Search Hyperparameter Benchmarking of BERT, ALBERT, and LongFormer on DuoRC'
+      sota_paper_url: https://arxiv.org/pdf/2101.06326
+      sota_score: 0.4648
+      sota_notes: Best score achieved in SOTA paper using ALBERT model.
+      sota_year: 2021
+      sota_venue: Preprint
+  dataset_paper_url: https://arxiv.org/abs/1804.07927
+  estimated_worst_score: 0.0
+  optimal_score: 1.0

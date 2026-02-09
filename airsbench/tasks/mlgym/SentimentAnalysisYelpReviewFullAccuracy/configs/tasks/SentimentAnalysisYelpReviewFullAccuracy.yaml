@@ -1,0 +1,63 @@
+dataset_configs:
+- datasets/yelp_review_full.yaml
+description: "\n# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to complete the project's TASK following the instructions provided\
+  \ below.\n\n    TASK: This is a NLP task to perform Sentiment Analysis on Yelp/yelp_review_full/.\
+  \ Your predictions will be scored against the `label` column of the test set.\n\n\
+  ## Data\n### Dataset Structure\nThe default config of Yelp/yelp_review_full/ has\
+  \ the following structure.\nHere is a description of the contents of each column\
+  \ including their name, what they contain, and the data type:\n```\nColumn types:\n\
+  \  label: ClassLabel(names=['1 star', '2 star', '3 stars', '4 stars', '5 stars']):\
+  \ The given rating (0 , 1, 2, 3, or 4).\n  text: Value('string'): The review text\
+  \ provided by the user.\n```\nTrain data can be loaded using load_from_disk('./data/train')\
+  \ and test data can be loaded using load_from_disk('./data/test').\nNote that the\
+  \ scoring column has been removed from the test data.\n### Submission file\nThe\
+  \ submission file should be a csv file named `submission.csv` with the following\
+  \ header:\n``` label ```\n\nAnd it should be of shape `(50000)`.\n\n### Evalution\n\
+  The evaluation will be performed on the `submission.csv` file you have submitted\
+  \ using the Accuracy metric. Here is the evaluation script that will be used:\n\n\
+  ```py\n#!/usr/bin/env python3\nimport argparse, json\nimport numpy as np\nimport\
+  \ pandas as pd\nfrom datasets import load_dataset, load_from_disk\n\n\ndef load_test_set():\n\
+  \    ds = load_from_disk(\"./data/test_with_labels\")\n    ground_truth = [int(x)\
+  \ for x in ds[\"label\"]]\n    return ground_truth\n\ndef evaluate(predictions,\
+  \ labels):\n    \"\"\"\n    Returns a dict of metric_name -> value\n    \"\"\"\n\
+  \n    # Convert inputs to int if they are strings (purposefully for string only)\n\
+  \    labels = [int(x) if isinstance(x, str) else x for x in labels]\n    predictions\
+  \ = [int(x) if isinstance(x, str) else x for x in predictions]\n\n    accuracy =\
+  \ float(np.mean(np.array(predictions) == np.array(labels)))\n\n    return {{\"Accuracy\"\
+  : accuracy}}\n    \n\n\ndef _cli():\n    p = argparse.ArgumentParser(\n        description=\"\
+  Evaluate predictions for qm9 test split using MeanSquaredError.\"\n    )\n    p.add_argument(\"\
+  --submission-file\", default=\"submission.csv\",\n                   help=\"Path\
+  \ to CSV file containing predictions.\")\n    a = p.parse_args()\n\n    print(\"\
+  Loading test set labels...\")\n    labels = load_test_set()\n    n_test_samples\
+  \ = len(labels)\n    print(f\"Loaded {{n_test_samples}} labels.\")\n\n    print(f\"\
+  Loading predictions from: {{a.submission_file}}\")\n    try:\n        # Assuming\
+  \ CSV has no header and contains only prediction values\n        # Adjust if your\
+  \ submission format is different (e.g., has headers, specific columns)\n       \
+  \ submission_df = pd.read_csv(a.submission_file, header=0)\n        preds = submission_df.values.squeeze()\n\
+  \        if preds.shape[0] != n_test_samples:\n            raise ValueError(\n \
+  \               f\"Submission file row count ({{preds.shape[0]}}) \"\n         \
+  \       f\"does not match test set size ({{n_test_samples}}).\"\n            )\n\
+  \        # Further shape validation could be added here against spec['shape_per_item']\n\
+  \        # e.g., if preds.shape[1:] != spec['shape_per_item']\n    except FileNotFoundError:\n\
+  \        p.error(f\"Submission file not found: {{a.submission_file}}\")\n    except\
+  \ Exception as e:\n        p.error(f\"Error loading submission_file: {{e}}\")\n\n\
+  \    print(\"Evaluating predictions...\")\n    result = evaluate(preds, labels)\n\
+  \n    print(\"\\n--- EVALUATION RESULT ---\")\n    print(json.dumps(result, indent=2))\n\
+  \nif __name__ == '__main__':\n    _cli()\n```If a baseline is given, your task is\
+  \ to train a new model that improves performance on the given dataset as much as\
+  \ possible. If you fail to produce a valid submission artefact evaluation file will\
+  \ give you a score of 0.\n{dataset_docs}"
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: SentimentAnalysisYelpReviewFullAccuracy
+memory_path: data/SentimentAnalysisYelpReviewFullAccuracy/memory.json
+metric_lower_is_better: false
+name: SentimentAnalysisYelpReviewFullAccuracy
+requirements_path: data/SentimentAnalysisYelpReviewFullAccuracy/requirements.txt
+starter_code:
+- data/SentimentAnalysisYelpReviewFullAccuracy/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false

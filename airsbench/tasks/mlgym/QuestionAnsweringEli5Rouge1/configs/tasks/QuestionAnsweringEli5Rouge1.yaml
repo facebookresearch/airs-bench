@@ -1,0 +1,80 @@
+cleanup_eval_on_failure: false
+dataset_configs:
+- datasets/eli5.yaml
+description: "\n# Overview\n## Task Description\nThis is a Machine Learning project\
+  \ and your goal is to complete the project's TASK following the instructions provided\
+  \ below.\n\n    TASK: This is a NLP task to perform QuestionAnswering on Pavithree/eli5.\
+  \ Your predictions will be scored against the answers column of the test set.\n\n\
+  ## Data\n### Dataset Structure\nThe default config of Pavithree/eli5 has the following\
+  \ structure.\nHere is a description of the contents of each column including their\
+  \ name, what they contain, and the data type:\n ``` {{'q_id': Value('string'), 'title':\
+  \ Value('string'), 'selftext': Value('string'), 'document': Value('string'), 'subreddit':\
+  \ Value('string'), 'url': Value('string'), 'answers': {{'a_id': List(Value('string')),\
+  \ 'score': List(Value('int64')), 'text': List(Value('string'))}}, 'title_urls':\
+  \ List(Value('string')), 'selftext_urls': List(Value('string')), 'answers_urls':\
+  \ List(List(Value('string')))}} ```\nTrain data can be loaded using load_from_disk('./data/train')\
+  \ and test data can be loaded using load_from_disk('./data/test').\nNote that the\
+  \ scoring column has been removed from the test data.\n### Submission file\nThe\
+  \ submission file should be a csv file named `submission.csv` with the following\
+  \ header:\n``` answers ```\n\nAnd it should be of shape (10000,).\n\n### Evalution\n\
+  The evaluation will be performed on the `submission.csv` file you have submitted\
+  \ using the Rouge1 metric. Here is the evaluation script that will be used:\n\n\
+  ```py\n#!/usr/bin/env python3\nimport argparse, json, numpy as np, pandas as pd\n\
+  # Conditional torch import - might be added by generated functions if needed\n#import\
+  \ torch\nfrom datasets import load_dataset, load_from_disk\nimport torch\nimport\
+  \ numpy as np\nimport evaluate\nimport numpy\nfrom typing import List, Dict\nfrom\
+  \ rouge_score import rouge_scorer, scoring\n\n\ndef compute_rouge(preds, refs, types=(\"\
+  rouge1\",), stemmer=True):\n    scorer = rouge_scorer.RougeScorer(types, use_stemmer=stemmer)\n\
+  \    agg = scoring.BootstrapAggregator()\n    for p, r in zip(preds, refs):\n  \
+  \      agg.add_scores(scorer.score(r, p))  # (reference, prediction)\n    out =\
+  \ agg.aggregate()\n    # return mid F1 like TorchMetrics\n    return {{k: v.mid.fmeasure\
+  \ for k, v in out.items()}}\n\n\ndef load_test_set():\n    # dataset = load_dataset('Pavithree/eli5',\
+  \ 'default', split='test')\n    dataset = load_from_disk('./data/test_with_labels')\n\
+  \    ground_truth = dataset.map(lambda x: {{\"answers\": x[\"answers\"][\"text\"\
+  ][0] if x[\"answers\"][\"text\"] else None}})['answers']# dict['answers'] = list\n\
+  \    return ground_truth\n\n\ndef evaluate_function(predictions: List[str], labels:\
+  \ List[str]) -> Dict[str, float]:\n    \"\"\"\n    Computes the ROUGE-1 metric for\
+  \ a molecule captioning task.\n\n    Args:\n        predictions (List[str]): A list\
+  \ of predicted captions.\n        labels (List[str]): A list of ground truth captions.\n\
+  \n    Returns:\n        Dict[str, float]: A dictionary containing the ROUGE-1 F-measure\
+  \ score.\n    \"\"\"\n\n    print(f\"Calling evaluate on {{len(predictions)}} predictions\
+  \ and {{len(labels)}} labels...\")\n\n    results = compute_rouge(predictions, labels)\n\
+  \    rouge1_fmeasure = float(results[\"rouge1\"])\n\n    return {{\"ROUGE-1\": rouge1_fmeasure}}\n\
+  \n\ndef _cli():\n    p = argparse.ArgumentParser(\n        description=\"Evaluate\
+  \ predictions for ChEBI-20 test split using ROUGE-1.\"\n    )\n    p.add_argument(\"\
+  --submission-file\", default=\"submission.csv\",\n                   help=\"Path\
+  \ to CSV file containing predictions.\")\n    a = p.parse_args()\n\n    print(\"\
+  Loading test set labels...\")\n    labels = load_test_set()\n    n_test_samples\
+  \ = len(labels)\n    print(f\"Loaded {{n_test_samples}} labels.\")\n\n    print(f\"\
+  Loading predictions from: {{a.submission_file}}\")\n    try:\n        # Assuming\
+  \ CSV has no header and contains only prediction values\n        # Adjust if your\
+  \ submission format is different (e.g., has headers, specific columns)\n       \
+  \ submission_df = pd.read_csv(a.submission_file, header=0)\n        preds = submission_df.values.squeeze()\n\
+  \        if preds.shape[0] != n_test_samples:\n            raise ValueError(\n \
+  \               f\"Submission file row count ({{preds.shape[0]}}) \"\n         \
+  \       f\"does not match test set size ({{n_test_samples}}).\"\n            )\n\
+  \        # Further shape validation could be added here against spec['shape_per_item']\n\
+  \        # e.g., if preds.shape[1:] != spec['shape_per_item']\n    except FileNotFoundError:\n\
+  \        p.error(f\"Submission file not found: {{a.submission_file}}\")\n    except\
+  \ Exception as e:\n        p.error(f\"Error loading submission_file: {{e}}\")\n\n\
+  \    print(\"Evaluating predictions...\")\n    result = evaluate_function(preds,\
+  \ labels)\n\n    print(\"\\n--- EVALUATION RESULT ---\")\n    print(json.dumps(result,\
+  \ indent=2))\n\nif __name__ == '__main__':\n    _cli()\n```If a baseline is given,\
+  \ your task is to train a new model that improves performance on the given dataset\
+  \ as much as possible. If you fail to produce a valid submission artefact evaluation\
+  \ file will give you a score of 0.\n{dataset_docs}"
+eval_timeout: 3600
+evaluation_paths:
+- evaluate.py
+evaluation_read_only: true
+id: QuestionAnsweringEli5Rouge1
+memory_path: data/QuestionAnsweringEli5Rouge1/memory.json
+metric_lower_is_better: false
+name: QuestionAnsweringEli5Rouge1
+requirements_path: data/QuestionAnsweringEli5Rouge1/requirements.txt
+starter_code:
+- data/QuestionAnsweringEli5Rouge1/evaluate.py
+task_entrypoint: CSVSubmissionTasks
+training_timeout: 3600
+use_generic_conda: false
+use_separate_eval_container: true
