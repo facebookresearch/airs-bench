@@ -34,5 +34,5 @@ logging_info:
       sota_year: 2024
       sota_venue: IEEE/ACM Transactions on Audio, Speech and Language Processing
   dataset_paper_url: https://arxiv.org/abs/1404.3648
-  estimated_worst_score: -0.0100639174
+  estimated_worst_score: -0.5870786
   optimal_score: 1.0

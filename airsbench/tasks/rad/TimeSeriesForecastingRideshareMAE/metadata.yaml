@@ -24,7 +24,7 @@ logging_info:
   input_columns:
     - target
     - feat_dynamic_real
-  scoring_column: 
+  scoring_column:
    - label_target
   shape: (2304,)
   custom_gold_labels: true
@@ -36,6 +36,5 @@ logging_info:
       sota_year: 2025
       sota_venue: Preprint
   dataset_paper_url: https://arxiv.org/abs/2105.06643
-  estimated_worst_score: 9.09136413
+  estimated_worst_score: 30.22490
   optimal_score: 0.0
-  

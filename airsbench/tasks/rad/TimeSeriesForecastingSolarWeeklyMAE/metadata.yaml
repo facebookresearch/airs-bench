@@ -23,7 +23,7 @@ logging_info:
   test_split: test
   input_columns:
     - target
-  scoring_column: 
+  scoring_column:
     - label_target
   shape: (137,)
   custom_gold_labels: true
@@ -35,5 +35,5 @@ logging_info:
       sota_year: 2025
       sota_venue: ICML
   dataset_paper_url: https://arxiv.org/abs/2105.06643
-  estimated_worst_score: 627933888720355
+  estimated_worst_score: 34761.99
   optimal_score: 0.0

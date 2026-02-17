@@ -34,5 +34,5 @@ logging_info:
       sota_year: 2023
       sota_venue: Computational Linguistics
   dataset_paper_url: https://arxiv.org/abs/1404.3648
-  estimated_worst_score: 0.1449245821
+  estimated_worst_score: 0.1451284
   optimal_score: 1.0
