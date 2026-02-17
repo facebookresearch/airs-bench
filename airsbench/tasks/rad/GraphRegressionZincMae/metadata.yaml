@@ -25,7 +25,7 @@ logging_info:
     - edge_attr
     - num_nodes
   scoring_column: y
-  shape: 
+  shape:
    - 5000
   custom_gold_labels: false
   custom_rad_class: false
@@ -38,5 +38,5 @@ logging_info:
       sota_year: 2024
       sota_venue: Nature Communications
   dataset_paper_url: https://pubs.acs.org/doi/10.1021/ci049714+
-  estimated_worst_score: 9.699923627
+  estimated_worst_score: 9.699924
   optimal_score: 0.0

@@ -35,5 +35,5 @@ logging_info:
       sota_year: 2020
       sota_venue: Preprint
   dataset_paper_url: https://arxiv.org/abs/1907.10641
-  estimated_worst_score: 0.4869771113
+  estimated_worst_score: 0.4664562
   optimal_score: 1.0

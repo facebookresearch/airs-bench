@@ -63,20 +63,20 @@ The leaderboard below shows bencmark performance for the range of agents we eval
 
  | Agent                     | Avg. norm. score | # seeds | Date     |
   | ------------------------ | ---------- | ------ | ---------- |
-  | Greedy gpt-oss-120b      | 0.522 ± 0.018 | 10     | 2026-02-06 |
-  | Greedy gpt-oss-20b       | 0.456 ± 0.024 | 10     | 2026-02-06 |
-  | Greedy o3-mini           | 0.445 ± 0.021 | 10     | 2026-02-06 |
-  | Greedy CWM               | 0.364 ± 0.019 | 10     | 2026-02-06 |
-  | Greedy GPT-4o            | 0.334 ± 0.028 | 10     | 2026-02-06 |
-  | MLGym CWM                | 0.302 ± 0.026 | 10     | 2026-02-06 |
-  | Greedy Devstral          | 0.198 ± 0.018 | 10     | 2026-02-06 |
-  | MLGym GPT-4o             | 0.178 ± 0.025 | 10     | 2026-02-06 |
-  | One-Shot o3-mini          | 0.171 ± 0.017 | 20     | 2026-02-06 |
-  | One-Shot gpt-oss-120b     | 0.161 ± 0.020 | 20     | 2026-02-06 |
-  | One-Shot gpt-oss-20b      | 0.077 ± 0.018 | 20     | 2026-02-06 |
-  | One-Shot GPT-4o           | 0.057 ± 0.014 | 20     | 2026-02-06 |
-  | One-Shot CWM             | 0.041 ± 0.011 | 20     | 2026-02-06 |
-  | One-Shot Devstral         | 0.018 ± 0.008 | 20     | 2026-02-06 |
+  | Greedy gpt-oss-120b      | 0.402 ± 0.031 | 10     | 2026-02-16 |
+  | Greedy gpt-oss-20b       | 0.400 ± 0.032 | 10     | 2026-02-16 |
+  | Greedy o3-mini           | 0.391 ± 0.022 | 10     | 2026-02-16 |
+  | Greedy GPT-4o            | 0.309 ± 0.028 | 10     | 2026-02-16 |
+  | MLGym CWM                | 0.302 ± 0.026 | 10     | 2026-02-16 |
+  | Greedy CWM               | 0.287 ± 0.026 | 10     | 2026-02-16 |
+  | Greedy Devstral          | 0.179 ± 0.021 | 10     | 2026-02-16 |
+  | MLGym GPT-4o             | 0.178 ± 0.025 | 10     | 2026-02-16 |
+  | One-Shot o3-mini         | 0.171 ± 0.017 | 20     | 2026-02-16 |
+  | One-Shot gpt-oss-120b    | 0.161 ± 0.020 | 20     | 2026-02-16 |
+  | One-Shot gpt-oss-20b     | 0.077 ± 0.019 | 20     | 2026-02-16 |
+  | One-Shot GPT-4o          | 0.057 ± 0.015 | 20     | 2026-02-16 |
+  | One-Shot CWM             | 0.041 ± 0.011 | 20     | 2026-02-16 |
+  | One-Shot Devstral        | 0.018 ± 0.009 | 20     | 2026-02-16 |
 
 
 

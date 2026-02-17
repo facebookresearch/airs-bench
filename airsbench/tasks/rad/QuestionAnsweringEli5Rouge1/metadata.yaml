@@ -30,5 +30,5 @@ logging_info:
       sota_year: 2023
       sota_venue: ACL
   dataset_paper_url: https://arxiv.org/abs/1907.09190
-  estimated_worst_score: 0.002452415741
+  estimated_worst_score: 0.002451528
   optimal_score: 1.0
