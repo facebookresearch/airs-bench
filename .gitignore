@@ -149,3 +149,6 @@ airsbench/tasks/rad/*/*.csv
 
 # notebooks output
 notebooks/*.pdf
+
+# HF upload
+hf_upload/
