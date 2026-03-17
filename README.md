@@ -3,6 +3,7 @@
 <p align="center">
   <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.en"><img src="https://img.shields.io/badge/license-CC--BY--NC%204.0-lightgrey"/></a>
   <a href="https://arxiv.org/abs/2602.06855"><img src="https://img.shields.io/badge/arXiv-2602.06855-b31b1b.svg"/></a>
+  <a href="https://huggingface.co/datasets/facebook/airs-bench"><img src="https://img.shields.io/badge/Dataset-HuggingFace-yellow"/></a>
 </p>
 
 The **AI** **R**esearch **S**cience Benchmark is an eval that quantifies the autonomous research abilities of LLM agents in the area of machine learning. AIRS-Bench comprises 20 tasks from state-of-the-art machine learning papers spanning diverse domains such as NLP, Code, Math, biochemical modelling and time series forecasting.
@@ -25,7 +26,7 @@ and resources available for its exploration. The picture below illustrates the i
 
 ![Agents, Scaffolds, Harnesses ](images/agent-scaffold-harness.png)
 
-In order to evaluate the impact of different scaffolds on agentic task performance, we tested agents using both linear and parallel harness frameworks. For the linear case, we measured the performance of a *ReAct* scaffold built by the open-source [MLGym](https://github.com/facebookresearch/mlgym/) framework. For the parallel case, we benchmarked two  scaffolds, *One-shot* and *Greedy*, using the open-source [aira-dojo](https://github.com/facebookresearch/aira-dojo/) parallel harness framework. One-shot agents can attempt solving the problem only once, whereas Greedy agents can perform a tree-based best-first search to tackle the task. Agents are powered by LLMs, such as the Meta open-weights [Code World Model](https://ai.meta.com/research/publications/cwm-an-open-weights-llm-for-research-on-code-generation-with-world-models/) ([CWM](https://huggingface.co/facebook/cwm)). 
+In order to evaluate the impact of different scaffolds on agentic task performance, we tested agents using both linear and parallel harness frameworks. For the linear case, we measured the performance of a *ReAct* scaffold built by the open-source [MLGym](https://github.com/facebookresearch/mlgym/) framework. For the parallel case, we benchmarked two  scaffolds, *One-shot* and *Greedy*, using the open-source [aira-dojo](https://github.com/facebookresearch/aira-dojo/) parallel harness framework. One-shot agents can attempt solving the problem only once, whereas Greedy agents can perform a tree-based best-first search to tackle the task. Agents are powered by LLMs, such as the Meta open-weights [Code World Model](https://ai.meta.com/research/publications/cwm-an-open-weights-llm-for-research-on-code-generation-with-world-models/) ([CWM](https://huggingface.co/facebook/cwm)).
 
 
 To evaluate benchmark performance we designed a *normalized score* metric $NS_{t}^a$ that summarises the performance of an agent $a$ on a task $t$:
@@ -105,10 +106,10 @@ AIRS-Bench consists of 20 tasks whose definitions can be found under [airsbench/
     ┗ 📂 U0MolecularPropertyPredictionQm9MeanAbsoluteError
 ┣ 📂 datasets/
 ┣ 📂 images/
-┣ 📂 notebooks/ 
-┣ 📂 scripts/ 
-┣ 📄 README.md   
-┗ 📄 pyproject.toml  
+┣ 📂 notebooks/
+┣ 📂 scripts/
+┣ 📄 README.md
+┗ 📄 pyproject.toml
 ```
 
 Each task is specified using the following files:
@@ -119,7 +120,7 @@ Each task is specified using the following files:
 - `evaluate_prepare.py` contains the dataset preparation logic to evaluate the agent's submission (i.e. labels for the test set)
 - `utils.py` is an optional file to consolidate overlapping code between the `prepare.py`, `evaluate.py` and `evaluate_prepare.py` files
 
-The above task specification can be directly ingested by the [aira-dojo](https://github.com/facebookresearch/aira-dojo/) agentic harness and can be programatically converted into task definition files for other frameworks. We provide a conversion script below that transforms the files above 
+The above task specification can be directly ingested by the [aira-dojo](https://github.com/facebookresearch/aira-dojo/) agentic harness and can be programatically converted into task definition files for other frameworks. We provide a conversion script below that transforms the files above
 into task definition files for the [MLGym](https://github.com/facebookresearch/mlgym/) agentic framework.
 ```
 python scripts/converter_rad_mlgym_enhanced.py airsbench/tasks/rad/TextualClassificationSickAccuracy
@@ -156,13 +157,13 @@ pip install -e .
 Please cite using the following BibTeX entry:
 ```
 @article{lupidi2026airsbenchsuitetasksfrontier,
-      title={AIRS-Bench: a Suite of Tasks for Frontier AI Research Science Agents}, 
+      title={AIRS-Bench: a Suite of Tasks for Frontier AI Research Science Agents},
       author={Alisia Lupidi and Bhavul Gauri and Thomas Simon Foster and Bassel Al Omari and Despoina Magka and Alberto Pepe and Alexis Audran-Reiss and Muna Aghamelu and Nicolas Baldwin and Lucia Cipolina-Kun and Jean-Christophe Gagnon-Audet and Chee Hau Leow and Sandra Lefdal and Hossam Mossalam and Abhinav Moudgil and Saba Nazir and Emanuel Tewolde and Isabel Urrego and Jordi Armengol Estape and Amar Budhiraja and Gaurav Chaurasia and Abhishek Charnalia and Derek Dunfield and Karen Hambardzumyan and Daniel Izcovich and Martin Josifoski and Ishita Mediratta and Kelvin Niu and Parth Pathak and Michael Shvartsman and Edan Toledo and Anton Protopopov and Roberta Raileanu and Alexander Miller and Tatiana Shavrina and Jakob Foerster and Yoram Bachrach},
       year={2026},
       eprint={2602.06855},
       archivePrefix={arXiv},
       primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2602.06855}, 
+      url={https://arxiv.org/abs/2602.06855},
 }
 ```
 
