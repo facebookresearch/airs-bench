@@ -63,7 +63,14 @@ def evaluate(predictions, labels):
         # there is one sample that seems to have all nans in the label after filtering
         if label.shape[0] == 0:
             continue
-    
+
+        # Skip series where the naive error denominator is zero (constant series).
+        # MASE is undefined when all training diffs are zero because the denominator
+        # mean(|y_t - y_{t-1}|) = 0, causing the metric to explode to infinity.
+        naive_denom = np.mean(np.abs(np.diff(train_target)))
+        if naive_denom == 0:
+            continue
+
         mase = mean_absolute_scaled_error(y_true=label, y_pred=pred, y_train=train_target)
         mases.append(mase)
 
