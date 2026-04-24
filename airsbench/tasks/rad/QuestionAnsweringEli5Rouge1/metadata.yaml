@@ -11,7 +11,7 @@ logging_info:
   category: Question Answering
   research_problem: Question Answering
   dataset: Pavithree/eli5
-  metric: Rouge1
+  metric: RougeL
   shape: (10000,)
   scoring_column: answers
   config: default
