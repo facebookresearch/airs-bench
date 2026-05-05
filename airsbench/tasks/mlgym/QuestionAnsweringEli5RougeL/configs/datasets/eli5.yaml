@@ -1,4 +1,4 @@
-data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/QuestionAnsweringEli5Rouge1
+data_path: /checkpoint/maui/shared/datasets/airs_text_only_prepared/QuestionAnsweringEli5RougeL
 description:
   answers:
     a_id:

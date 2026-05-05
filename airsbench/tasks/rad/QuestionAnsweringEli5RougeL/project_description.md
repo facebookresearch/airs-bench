@@ -19,7 +19,7 @@ The submission file should be a csv file named `submission.csv` with the followi
 And it should be of shape (10000,).
 
 ### Evalution
-The evaluation will be performed on the `submission.csv` file you have submitted using the Rouge1 metric. Here is the evaluation script that will be used:
+The evaluation will be performed on the `submission.csv` file you have submitted using the RougeL metric. Here is the evaluation script that will be used:
 
 ```py
 #!/usr/bin/env python3
@@ -35,7 +35,7 @@ from typing import List, Dict
 from rouge_score import rouge_scorer, scoring
 
 
-def compute_rouge(preds, refs, types=("rouge1",), stemmer=True):
+def compute_rouge(preds, refs, types=("rougeL",), stemmer=True):
     scorer = rouge_scorer.RougeScorer(types, use_stemmer=stemmer)
     agg = scoring.BootstrapAggregator()
     for p, r in zip(preds, refs):
@@ -54,27 +54,27 @@ def load_test_set():
 
 def evaluate_function(predictions: List[str], labels: List[str]) -> Dict[str, float]:
     """
-    Computes the ROUGE-1 metric for a molecule captioning task.
+    Computes the ROUGE-L metric for the ELI5 question answering task.
 
     Args:
-        predictions (List[str]): A list of predicted captions.
-        labels (List[str]): A list of ground truth captions.
+        predictions (List[str]): A list of predicted answers.
+        labels (List[str]): A list of ground truth answers.
 
     Returns:
-        Dict[str, float]: A dictionary containing the ROUGE-1 F-measure score.
+        Dict[str, float]: A dictionary containing the ROUGE-L F-measure score.
     """
 
     print(f"Calling evaluate on {len(predictions)} predictions and {len(labels)} labels...")
 
     results = compute_rouge(predictions, labels)
-    rouge1_fmeasure = float(results["rouge1"])
+    rougeL_fmeasure = float(results["rougeL"])
 
-    return {"ROUGE-1": rouge1_fmeasure}
+    return {"RougeL": rougeL_fmeasure}
 
 
 def _cli():
     p = argparse.ArgumentParser(
-        description="Evaluate predictions for ChEBI-20 test split using ROUGE-1."
+        description="Evaluate predictions for eli5 test split using ROUGE-L."
     )
     p.add_argument("--submission-file", default="submission.csv",
                    help="Path to CSV file containing predictions.")
