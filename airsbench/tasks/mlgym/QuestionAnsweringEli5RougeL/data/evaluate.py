@@ -1,28 +1,10 @@
-
-# Overview
-## Task Description
-This is a Machine Learning project and your goal is to complete the project's TASK following the instructions provided below.
-
-    TASK: This is a NLP task to perform QuestionAnswering on Pavithree/eli5. Your predictions will be scored against the answers column of the test set.
-
-## Data
-### Dataset Structure
-The default config of Pavithree/eli5 has the following structure.
-Here is a description of the contents of each column including their name, what they contain, and the data type:
- ``` {'q_id': Value('string'), 'title': Value('string'), 'selftext': Value('string'), 'document': Value('string'), 'subreddit': Value('string'), 'url': Value('string'), 'answers': {'a_id': List(Value('string')), 'score': List(Value('int64')), 'text': List(Value('string'))}, 'title_urls': List(Value('string')), 'selftext_urls': List(Value('string')), 'answers_urls': List(List(Value('string')))} ```
-Train data can be loaded using load_from_disk('./data/train') and test data can be loaded using load_from_disk('./data/test').
-Note that the scoring column has been removed from the test data.
-### Submission file
-The submission file should be a csv file named `submission.csv` with the following header:
-``` answers ```
-
-And it should be of shape (10000,).
-
-### Evalution
-The evaluation will be performed on the `submission.csv` file you have submitted using the Rouge1 metric. Here is the evaluation script that will be used:
-
-```py
 #!/usr/bin/env python3
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
 import argparse, json, numpy as np, pandas as pd
 # Conditional torch import - might be added by generated functions if needed
 #import torch
@@ -35,7 +17,7 @@ from typing import List, Dict
 from rouge_score import rouge_scorer, scoring
 
 
-def compute_rouge(preds, refs, types=("rouge1",), stemmer=True):
+def compute_rouge(preds, refs, types=("rougeL",), stemmer=True):
     scorer = rouge_scorer.RougeScorer(types, use_stemmer=stemmer)
     agg = scoring.BootstrapAggregator()
     for p, r in zip(preds, refs):
@@ -47,34 +29,38 @@ def compute_rouge(preds, refs, types=("rouge1",), stemmer=True):
 
 def load_test_set():
     # dataset = load_dataset('Pavithree/eli5', 'default', split='test')
-    dataset = load_from_disk('./data/test_with_labels')
-    ground_truth = dataset.map(lambda x: {"answers": x["answers"]["text"][0] if x["answers"]["text"] else None})['answers']# dict['answers'] = list
+    dataset = load_from_disk('/home/agent/workspace/data/test_with_labels')
+    ground_truth = dataset.map(
+        lambda x: {"answers": x["answers"]["text"][0] if x["answers"]["text"] else None},
+        load_from_cache_file=False,
+        keep_in_memory=True,
+    )['answers'] # dict['answers'] = list
     return ground_truth
 
 
 def evaluate_function(predictions: List[str], labels: List[str]) -> Dict[str, float]:
     """
-    Computes the ROUGE-1 metric for a molecule captioning task.
+    Computes the ROUGE-L metric for the ELI5 question answering task.
 
     Args:
-        predictions (List[str]): A list of predicted captions.
-        labels (List[str]): A list of ground truth captions.
+        predictions (List[str]): A list of predicted answers.
+        labels (List[str]): A list of ground truth answers.
 
     Returns:
-        Dict[str, float]: A dictionary containing the ROUGE-1 F-measure score.
+        Dict[str, float]: A dictionary containing the ROUGE-L F-measure score.
     """
 
     print(f"Calling evaluate on {len(predictions)} predictions and {len(labels)} labels...")
 
     results = compute_rouge(predictions, labels)
-    rouge1_fmeasure = float(results["rouge1"])
+    rougeL_fmeasure = float(results["rougeL"])
 
-    return {"ROUGE-1": rouge1_fmeasure}
+    return {"RougeL": rougeL_fmeasure}
 
 
 def _cli():
     p = argparse.ArgumentParser(
-        description="Evaluate predictions for ChEBI-20 test split using ROUGE-1."
+        description="Evaluate predictions for eli5 test split using ROUGE-L."
     )
     p.add_argument("--submission-file", default="submission.csv",
                    help="Path to CSV file containing predictions.")
@@ -111,4 +97,3 @@ def _cli():
 
 if __name__ == '__main__':
     _cli()
-```

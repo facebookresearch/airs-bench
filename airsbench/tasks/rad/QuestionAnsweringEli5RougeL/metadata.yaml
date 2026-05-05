@@ -7,11 +7,11 @@ evaluate_container_python_requirements:
   - datasets==4.0.0
   - rouge_score
 logging_info:
-  name: QuestionAnsweringEli5Rouge1
+  name: QuestionAnsweringEli5RougeL
   category: Question Answering
   research_problem: Question Answering
   dataset: Pavithree/eli5
-  metric: Rouge1
+  metric: RougeL
   shape: (10000,)
   scoring_column: answers
   config: default
