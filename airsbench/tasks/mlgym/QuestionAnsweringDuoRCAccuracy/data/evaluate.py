@@ -21,23 +21,27 @@ def load_test_answers(path='/home/agent/workspace/data/test_with_labels'):
     return labels, no_answers
 
 def normalize_answer(s):
-    """SQuAD-style normalization: lowercase, strip punctuation/articles, collapse whitespace.
-
-    DuoRC (Saha et al., 2018) specifies the SQuAD (Rajpurkar et al., 2016) evaluation protocol.
+    """Normalize answer string following the SQuAD evaluation protocol
+    (Rajpurkar et al., 2016).  The original DuoRC paper (Saha et al., 2018)
+    explicitly states: "Similar to [Rajpurkar et al., 2016] we use Accuracy
+    and F-score as the evaluation metrics."
     """
     def remove_articles(text):
-        return re.sub(r"\b(a|an|the)\b", " ", text)
+        return re.sub(r'\b(a|an|the)\b', ' ', text)
     def white_space_fix(text):
-        return " ".join(text.split())
+        return ' '.join(text.split())
     def remove_punc(text):
         exclude = set(string.punctuation)
-        return "".join(ch for ch in text if ch not in exclude)
-    return white_space_fix(remove_articles(remove_punc(s.lower())))
+        return ''.join(ch for ch in text if ch not in exclude)
+    def lower(text):
+        return text.lower()
+    return white_space_fix(remove_articles(remove_punc(lower(s))))
+
 
 def is_correct_answer(submission, candidate_answers):
-    submission = normalize_answer(submission)
+    normalized_submission = normalize_answer(submission)
     for candidate_answer in candidate_answers:
-        if normalize_answer(candidate_answer) == submission:
+        if normalize_answer(candidate_answer) == normalized_submission:
             return True
     return False
 
