@@ -5,7 +5,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-import argparse, json
+import argparse, json, re, string
 import numpy as np
 import pandas as pd
 import torch
@@ -16,8 +16,26 @@ def load_test_set():
     dataset = load_from_disk('./data/test_with_labels')
     return [x["text"] for x in dataset["answers"]]
 
+def normalize_answer(s):
+    """Lower text and remove punctuation, articles and extra whitespace.
+    Matches the official SQuAD evaluate-v1.1.py (Rajpurkar et al. 2016)."""
+    s = str(s)
+    # Convert to lowercase
+    s = s.lower()
+    # Remove punctuation
+    s = ''.join(ch for ch in s if ch not in string.punctuation)
+    # Remove articles
+    s = re.sub(r'\b(a|an|the)\b', ' ', s)
+    # Collapse whitespace
+    s = ' '.join(s.split())
+    return s
+
+def compute_exact(a_gold, a_pred):
+    """Check whether normalized prediction matches normalized gold answer."""
+    return int(normalize_answer(a_gold) == normalize_answer(a_pred))
+
 def format_prediction(pred):
-    # handle edge cae
+    # handle edge case
     if pred == '"None"':
         return "None"
     return pred
@@ -25,14 +43,16 @@ def format_prediction(pred):
 def evaluate(predictions, labels):
     """
     Returns a dict of metric_name -> value
+    Uses normalized exact match following the official SQuAD evaluate-v1.1.py.
+    For each example, EM = max over gold answers of compute_exact(gold, pred).
     """
-    # Calculate exact match
     exact_matches = 0
     for pred, label_list in zip(predictions, labels):
-        if format_prediction(pred) in label_list:
+        pred_text = format_prediction(pred)
+        # Max over all acceptable gold answers (official SQuAD protocol)
+        if any(compute_exact(gold, pred_text) for gold in label_list):
             exact_matches += 1
-            continue
-    
+
     exact_match_score = exact_matches / len(labels)
 
     return {"ExactMatch": exact_match_score}
