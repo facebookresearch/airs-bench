@@ -5,7 +5,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-import argparse, json
+import argparse, json, re, string
 import numpy as np
 import pandas as pd
 from datasets import load_from_disk
@@ -20,10 +20,28 @@ def load_test_answers(path='/home/agent/workspace/data/test_with_labels'):
     no_answers = list(ds["no_answer"])
     return labels, no_answers
 
+def normalize_answer(s):
+    """Normalize answer string following the SQuAD evaluation protocol
+    (Rajpurkar et al., 2016).  The original DuoRC paper (Saha et al., 2018)
+    explicitly states: "Similar to [Rajpurkar et al., 2016] we use Accuracy
+    and F-score as the evaluation metrics."
+    """
+    def remove_articles(text):
+        return re.sub(r'\b(a|an|the)\b', ' ', text)
+    def white_space_fix(text):
+        return ' '.join(text.split())
+    def remove_punc(text):
+        exclude = set(string.punctuation)
+        return ''.join(ch for ch in text if ch not in exclude)
+    def lower(text):
+        return text.lower()
+    return white_space_fix(remove_articles(remove_punc(lower(s))))
+
+
 def is_correct_answer(submission, candidate_answers):
-    submission = submission.lower()
+    normalized_submission = normalize_answer(submission)
     for candidate_answer in candidate_answers:
-        if candidate_answer.lower() == submission:
+        if normalize_answer(candidate_answer) == normalized_submission:
             return True
     return False
 
