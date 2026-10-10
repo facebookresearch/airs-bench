@@ -4,7 +4,7 @@ scipy
 torch
 scikit-learn
 tqdm
-datasets==4.0.0
+datasets==5.0.1
 gymnasium
 transformers[torch]
 matplotlib
