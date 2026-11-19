@@ -75,7 +75,7 @@ def _cli():
     try:
         # Assuming CSV has no header and contains only prediction values
         # Adjust if your submission format is different (e.g., has headers, specific columns)
-        submission_df = pd.read_csv(a.submission_file, header=0)
+        submission_df = pd.read_csv(a.submission_file, header=0, keep_default_na=False)
         preds = submission_df.values.squeeze()
         if preds.shape[0] != n_test_samples:
             raise ValueError(
